@@ -457,11 +457,7 @@ async function loadTopHolders(ca) {
       }
     });
     const data = await res.json();
-    console.log("Top holders API result:", data);
 
-    if (!data.result) return;
-
-    // Desktop version
     const desktopList = document.getElementById("holders-list");
     if (desktopList) {
       desktopList.innerHTML = "";
@@ -472,7 +468,6 @@ async function loadTopHolders(ca) {
       });
     }
 
-    // Mobile version
     const mobileList = document.getElementById("mobile-holders-list");
     if (mobileList) {
       mobileList.innerHTML = "";
@@ -505,7 +500,9 @@ function startTopHoldersUpdater(ca) {
 <!-- Chart Placeholder -->
 </div></div><div class="info-grid"><div class="top-holders info-card">
 <h3>Top Holders</h3>
-<ul id="holders-list"></ul>
+<ul id="holders-list">
+<!-- Placeholder for holder list -->
+<li><a class="address-link" href="https://solscan.io/account/holder1" target="_blank">3h4f...a9eF</a> - 12.3%</li><li><a class="address-link" href="https://solscan.io/account/holder2" target="_blank">9vFx...Bc42</a> - 9.8%</li><li><a class="address-link" href="https://solscan.io/account/holder3" target="_blank">A1cE...Fd9A</a> - 7.5%</li><li><a class="address-link" href="https://solscan.io/account/holder4" target="_blank">Z8wQ...xXxX</a> - 6.1%</li><li><a class="address-link" href="https://solscan.io/account/holder5" target="_blank">L2rF...wXc3</a> - 5.0%</li><li><a class="address-link" href="https://solscan.io/account/holder6" target="_blank">M0sT...EzQa</a> - 4.4%</li><li><a class="address-link" href="https://solscan.io/account/holder7" target="_blank">HyTr...Yu1R</a> - 3.8%</li><li><a class="address-link" href="https://solscan.io/account/holder8" target="_blank">V1bz...O9Fq</a> - 3.3%</li><li><a class="address-link" href="https://solscan.io/account/holder9" target="_blank">K8bq...TtTx</a> - 2.9%</li><li><a class="address-link" href="https://solscan.io/account/holder10" target="_blank">R4Gh...cVcC</a> - 2.5%</li></ul>
 </div><div class="holder-change info-card">
 <h3>Holder Change</h3>
 <div id="holder-change-result"><div class="holder-change-grid"><div class="change-card"><div class="label">5m</div><div class="value live-value">+2</div></div><div class="change-card"><div class="label">1h</div><div class="value live-value">+15</div></div><div class="change-card"><div class="label">6h</div><div class="value live-value">+32</div></div><div class="change-card"><div class="label">24h</div><div class="value live-value">+80</div></div><div class="change-card"><div class="label">3d</div><div class="value live-value">+210</div></div><div class="change-card"><div class="label">7d</div><div class="value live-value">+550</div></div><div class="change-card"><div class="label">30d</div><div class="value live-value">+1.4k</div></div></div></div>
@@ -686,7 +683,9 @@ function startTopHoldersUpdater(ca) {
 </div>
 <div class="mobile-section">
 <h3>Top Holders</h3>
-<ul id="mobile-holders-list"></ul>
+<ul id="mobile-holders-list">
+  <!-- This list will be updated dynamically on mobile -->
+</ul>
 </div>
 <div class="mobile-section">
 <h3>Holder Change</h3>
