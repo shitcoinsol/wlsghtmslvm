@@ -320,9 +320,13 @@
       const errorBox = document.getElementById("error-box");
       const resultSection = document.getElementById("result-section");
 
+      // Hide previous messages and results
+      errorBox.style.display = "none";
+      resultSection.style.display = "none";
+
+      // Validate address before calling API
       if (!isValidSolanaAddress(ca)) {
         errorBox.style.display = "block";
-        resultSection.style.display = "none";
         return;
       }
 
@@ -457,9 +461,13 @@
       const errorBox = document.getElementById('error-box-mobile');
       const resultSection = document.getElementById('mobile-result');
 
+      // Hide previous messages and results
+      errorBox.style.display = 'none';
+      resultSection.style.display = 'none';
+
+      // Validate address before calling API
       if (!/^([1-9A-HJ-NP-Za-km-z]{32,44})$/.test(ca)) {
         errorBox.style.display = 'block';
-        resultSection.style.display = 'none';
         return;
       }
 
