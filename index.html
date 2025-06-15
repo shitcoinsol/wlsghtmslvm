@@ -457,7 +457,11 @@ async function loadTopHolders(ca) {
       }
     });
     const data = await res.json();
+    console.log("Top holders API result:", data);
 
+    if (!data.result) return;
+
+    // Desktop version
     const desktopList = document.getElementById("holders-list");
     if (desktopList) {
       desktopList.innerHTML = "";
@@ -468,6 +472,7 @@ async function loadTopHolders(ca) {
       });
     }
 
+    // Mobile version
     const mobileList = document.getElementById("mobile-holders-list");
     if (mobileList) {
       mobileList.innerHTML = "";
