@@ -307,6 +307,8 @@
     <a href="https://believe.app" style="color: #444; font-weight: 500; text-decoration: none; margin: 0 10px;" target="_blank">$SNIF</a>
 </footer>
 <script>
+    let tokenInterval;
+
     function handleKeyPress(e) {
       if (e.key === "Enter") searchToken();
     }
@@ -367,6 +369,26 @@
           ).textContent = `Market Cap: ${marketCap} · Liquidity: ${liquidity} · Supply: ${supply}`;
 
           resultSection.style.display = "block";
+
+          if (tokenInterval) clearInterval(tokenInterval);
+          tokenInterval = setInterval(() => {
+            Promise.all([
+              fetch(priceUrl, { headers: { "X-API-Key": moralisKey } }).then((r) => r.json()),
+              fetch(liqUrl, { headers: { "X-API-Key": moralisKey } }).then((r) => r.json()),
+              fetch(metaUrl, { headers: { token: solscanKey } }).then((r) => r.json()),
+            ]).then(([p, l, m]) => {
+              document.getElementById("token-price").textContent =
+                "$" + Number(p.usdPrice).toFixed(6);
+
+              const mc = Number(m.data.market_cap).toLocaleString();
+              const liq = Number(l.totalLiquidityUsd).toLocaleString();
+              const sup = Number(m.data.supply).toLocaleString();
+
+              document.getElementById(
+                "token-metrics"
+              ).textContent = `Market Cap: ${mc} · Liquidity: ${liq} · Supply: ${sup}`;
+            });
+          }, 5000);
         })
         .catch((err) => {
           console.error(err);
