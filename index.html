@@ -320,38 +320,58 @@
       const errorBox = document.getElementById("error-box");
       const resultSection = document.getElementById("result-section");
 
-      // Hide previous messages and results
       errorBox.style.display = "none";
       resultSection.style.display = "none";
 
-      // Validate address before calling API
       if (!isValidSolanaAddress(ca)) {
         errorBox.style.display = "block";
         return;
       }
 
-      fetch(`https://pro-api.solscan.io/v2.0/token/meta?address=${ca}` , {
-        method: "GET",
-        headers: {
-          token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJjcmVhdGVkQXQiOjE3NDk4NjAwMjIwMDUsImVtYWlsIjoid2F4amluaG8wMkBnbWFpbC5jb20iLCJhY3Rpb24iOiJ0b2tlbi1hcGkiLCJhcGlWZXJzaW9uIjoidjIiLCJpYXQiOjE3NDk4NjAwMjJ9.I1laMt2a0wIiMeQ0JFEDDWWqvwLQvnSjcS0mdvy-vM0"
-        }
-      })
-      .then(res => res.json())
-      .then(data => {
-        if (data.success) {
+      const metaUrl = `https://pro-api.solscan.io/v2.0/token/meta?address=${ca}`;
+      const priceUrl = `https://solana-gateway.moralis.io/token/mainnet/${ca}/price`;
+      const liqUrl = `https://deep-index.moralis.io/api/v2.2/tokens/${ca}/analytics?chain=solana`;
+
+      const solscanKey =
+        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJjcmVhdGVkQXQiOjE3NDk4NjAwMjIwMDUsImVtYWlsIjoid2F4amluaG8wMkBnbWFpbC5jb20iLCJhY3Rpb24iOiJ0b2tlbi1hcGkiLCJhcGlWZXJzaW9uIjoidjIiLCJpYXQiOjE3NDk4NjAwMjJ9.I1laMt2a0wIiMeQ0JFEDDWWqvwLQvnSjcS0mdvy-vM0";
+      const moralisKey =
+        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJub25jZSI6IjkyMzBkNGU3LWUyNjEtNGNiYi1hYzgzLTY4MDZmNDg5YzRhOSIsIm9yZ0lkIjoiNDUzNzM2IiwidXNlcklkIjoiNDY2ODMzIiwidHlwZUlkIjoiODVkOTcxZDMtODgzOS00NmYxLWJiMGEtM2IyY2Y5ZmE4NTU2IiwidHlwZSI6IlBST0pFQ1QiLCJpYXQiOjE3NDk4MDU3MTcsImV4cCI6NDkwNTU2NTcxN30.nbLVfn0ocROspwVeWXIOtw-d6Gm42Bnshujhlp3JrMI";
+
+      Promise.all([
+        fetch(metaUrl, { headers: { token: solscanKey } }).then((r) => r.json()),
+        fetch(priceUrl, { headers: { "X-API-Key": moralisKey } }).then((r) => r.json()),
+        fetch(liqUrl, { headers: { "X-API-Key": moralisKey } }).then((r) => r.json()),
+      ])
+        .then(([meta, price, liq]) => {
+          if (!meta || !meta.success) throw new Error("meta fail");
+
+          document.getElementById("token-logo").src = meta.data.icon || "";
+          document.getElementById("token-fullname").textContent = meta.data.name;
+
+          const tn = document.getElementById("token-name");
+          if (tn.firstChild) tn.firstChild.nodeValue = `$${meta.data.symbol}`;
+
+          const pumpImg = tn.querySelector('img[alt="pump.fun"]');
+          const isPump = (meta.data.metadata?.createdOn || "").includes("pump.fun");
+          pumpImg.style.display = isPump ? "inline-block" : "none";
+
+          document.getElementById("token-price").textContent =
+            "$" + Number(price.usdPrice).toFixed(6);
+
+          const marketCap = Number(meta.data.market_cap).toLocaleString();
+          const liquidity = Number(liq.totalLiquidityUsd).toLocaleString();
+          const supply = Number(meta.data.supply).toLocaleString();
+
+          document.getElementById(
+            "token-metrics"
+          ).textContent = `Market Cap: ${marketCap} · Liquidity: ${liquidity} · Supply: ${supply}`;
+
           resultSection.style.display = "block";
-          errorBox.style.display = "none";
-          // 이후에 data.name, data.symbol 등 표시할 데이터 여기에 추가
-        } else {
-          resultSection.style.display = "none";
+        })
+        .catch((err) => {
+          console.error(err);
           errorBox.style.display = "block";
-        }
-      })
-      .catch(err => {
-        console.error(err);
-        resultSection.style.display = "none";
-        errorBox.style.display = "block";
-      });
+        });
     }
 </script>
 <div id="result-section"><div class="token-info">
@@ -461,38 +481,61 @@
       const errorBox = document.getElementById('error-box-mobile');
       const resultSection = document.getElementById('mobile-result');
 
-      // Hide previous messages and results
       errorBox.style.display = 'none';
       resultSection.style.display = 'none';
 
-      // Validate address before calling API
       if (!/^([1-9A-HJ-NP-Za-km-z]{32,44})$/.test(ca)) {
         errorBox.style.display = 'block';
         return;
       }
 
-      fetch(`https://pro-api.solscan.io/v2.0/token/meta?address=${ca}`, {
-        method: 'GET',
-        headers: {
-          token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJjcmVhdGVkQXQiOjE3NDk4NjAwMjIwMDUsImVtYWlsIjoid2F4amluaG8wMkBnbWFpbC5jb20iLCJhY3Rpb24iOiJ0b2tlbi1hcGkiLCJhcGlWZXJzaW9uIjoidjIiLCJpYXQiOjE3NDk4NjAwMjJ9.I1laMt2a0wIiMeQ0JFEDDWWqvwLQvnSjcS0mdvy-vM0'
-        }
-      })
-      .then(res => res.json())
-      .then(data => {
-        if (data.success) {
+      const metaUrl = `https://pro-api.solscan.io/v2.0/token/meta?address=${ca}`;
+      const priceUrl = `https://solana-gateway.moralis.io/token/mainnet/${ca}/price`;
+      const liqUrl = `https://deep-index.moralis.io/api/v2.2/tokens/${ca}/analytics?chain=solana`;
+
+      const solscanKey =
+        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJjcmVhdGVkQXQiOjE3NDk4NjAwMjIwMDUsImVtYWlsIjoid2F4amluaG8wMkBnbWFpbC5jb20iLCJhY3Rpb24iOiJ0b2tlbi1hcGkiLCJhcGlWZXJzaW9uIjoidjIiLCJpYXQiOjE3NDk4NjAwMjJ9.I1laMt2a0wIiMeQ0JFEDDWWqvwLQvnSjcS0mdvy-vM0';
+      const moralisKey =
+        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJub25jZSI6IjkyMzBkNGU3LWUyNjEtNGNiYi1hYzgzLTY4MDZmNDg5YzRhOSIsIm9yZ0lkIjoiNDUzNzM2IiwidXNlcklkIjoiNDY2ODMzIiwidHlwZUlkIjoiODVkOTcxZDMtODgzOS00NmYxLWJiMGEtM2IyY2Y5ZmE4NTU2IiwidHlwZSI6IlBST0pFQ1QiLCJpYXQiOjE3NDk4MDU3MTcsImV4cCI6NDkwNTU2NTcxN30.nbLVfn0ocROspwVeWXIOtw-d6Gm42Bnshujhlp3JrMI';
+
+      Promise.all([
+        fetch(metaUrl, { headers: { token: solscanKey } }).then((r) => r.json()),
+        fetch(priceUrl, { headers: { 'X-API-Key': moralisKey } }).then((r) => r.json()),
+        fetch(liqUrl, { headers: { 'X-API-Key': moralisKey } }).then((r) => r.json()),
+      ])
+        .then(([meta, price, liq]) => {
+          if (!meta || !meta.success) throw new Error('meta fail');
+
+          const logo = document.querySelector('#mobile-result .summary-header img');
+          if (logo) logo.src = meta.data.icon || '';
+
+          document.getElementById('mobile-fullname').textContent = meta.data.name;
+
+          const tn = document.querySelector('#mobile-result .token-name');
+          if (tn && tn.firstChild) tn.firstChild.nodeValue = `$${meta.data.symbol}`;
+
+          const pumpImg = tn ? tn.querySelector('img[alt="pump.fun"]') : null;
+          const isPump = (meta.data.metadata?.createdOn || '').includes('pump.fun');
+          if (pumpImg) pumpImg.style.display = isPump ? 'inline-block' : 'none';
+
+          const priceEl = document.querySelector('#mobile-result .token-price');
+          if (priceEl) priceEl.textContent = '$' + Number(price.usdPrice).toFixed(6);
+
+          const marketCap = Number(meta.data.market_cap).toLocaleString();
+          const liquidity = Number(liq.totalLiquidityUsd).toLocaleString();
+          const supply = Number(meta.data.supply).toLocaleString();
+
+          const details = document.querySelector('#mobile-result .summary-details');
+          if (details)
+            details.innerHTML =
+              `💰 Market Cap: ${marketCap} <br/> 🧪 Liquidity: ${liquidity} <br/> 💠 Supply: ${supply}`;
+
           resultSection.style.display = 'block';
-          errorBox.style.display = 'none';
-          // 이후에 data.name, data.symbol 등 표시할 데이터 여기에 추가
-        } else {
-          resultSection.style.display = 'none';
+        })
+        .catch((err) => {
+          console.error(err);
           errorBox.style.display = 'block';
-        }
-      })
-      .catch(err => {
-        console.error(err);
-        resultSection.style.display = 'none';
-        errorBox.style.display = 'block';
-      });
+        });
     }
   </script>
 </div>
