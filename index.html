@@ -309,6 +309,7 @@
         margin-top: 20px;
         text-align: center;
     "><img src="wrong.png" style="width: 100px; margin-bottom: 10px;"/><div style="font-size: 18px; color: #dc3545; font-weight: bold;">Something is wrong!</div></div>
+<div id="loading-indicator" style="display:none; margin-top:20px; text-align:center; font-weight:bold;">Loading...</div>
 <footer style="position: fixed; bottom: 0; width: 100%; background: white; border-top: 1px solid #e0e0e0; padding: 10px 0; text-align: center; font-size: 14px; z-index: 999;">
 <a href="https://x.com/sniffun" style="color: #444; font-weight: 500; text-decoration: none; margin: 0 10px;" target="_blank">snif.fun</a>
     ·
@@ -317,6 +318,7 @@
 <script>
     let tokenInterval;
     let holdersInterval;
+    let currentCA = '';
 
     function handleKeyPress(e) {
       if (e.key === "Enter") searchToken();
@@ -352,12 +354,27 @@
       const ca = document.getElementById("ca-input").value.trim();
       const errorBox = document.getElementById("error-box");
       const resultSection = document.getElementById("result-section");
+      const loading = document.getElementById("loading-indicator");
 
       errorBox.style.display = "none";
       resultSection.style.display = "none";
+      if (loading) loading.style.display = "block";
+
+      if (tokenInterval) clearInterval(tokenInterval);
+      if (holdersInterval) clearInterval(holdersInterval);
+
+      document.getElementById("token-logo").src = "";
+      document.getElementById("token-fullname").textContent = "";
+      const tnReset = document.getElementById("token-name");
+      if (tnReset) tnReset.textContent = "";
+      document.getElementById("token-price").textContent = "Loading...";
+      document.getElementById("token-metrics").textContent = "";
+      const holdersList = document.getElementById("holders-list");
+      if (holdersList) holdersList.innerHTML = "<li>Loading...</li>";
 
       if (!isValidSolanaAddress(ca)) {
         errorBox.style.display = "block";
+        if (loading) loading.style.display = "none";
         return;
       }
 
@@ -400,10 +417,12 @@
           ).textContent = `Market Cap: ${marketCap} · Liquidity: ${liquidity} · Supply: ${supply}`;
 
 
+          currentCA = ca;
+          if (loading) loading.style.display = "none";
           resultSection.style.display = "block";
           if (holdersInterval) clearInterval(holdersInterval);
-          fetchTopHolders(ca, solscanKey);
-          holdersInterval = setInterval(() => fetchTopHolders(ca, solscanKey), 10000);
+          fetchTopHolders(currentCA, solscanKey);
+          holdersInterval = setInterval(() => fetchTopHolders(currentCA, solscanKey), 10000);
 
           const widgetContainer = document.getElementById(
             "price-chart-widget-container"
@@ -457,10 +476,13 @@
 
           if (tokenInterval) clearInterval(tokenInterval);
           tokenInterval = setInterval(() => {
+            const pUrl = `https://solana-gateway.moralis.io/token/mainnet/${currentCA}/price`;
+            const lUrl = `https://deep-index.moralis.io/api/v2.2/tokens/${currentCA}/analytics?chain=solana`;
+            const mUrl = `https://pro-api.solscan.io/v2.0/token/meta?address=${currentCA}`;
             Promise.all([
-              fetch(priceUrl, { headers: { "X-API-Key": moralisKey } }).then((r) => r.json()),
-              fetch(liqUrl, { headers: { "X-API-Key": moralisKey } }).then((r) => r.json()),
-              fetch(metaUrl, { headers: { token: solscanKey } }).then((r) => r.json()),
+              fetch(pUrl, { headers: { "X-API-Key": moralisKey } }).then((r) => r.json()),
+              fetch(lUrl, { headers: { "X-API-Key": moralisKey } }).then((r) => r.json()),
+              fetch(mUrl, { headers: { token: solscanKey } }).then((r) => r.json()),
             ]).then(([p, l, m]) => {
               document.getElementById("token-price").textContent =
                 "$" + Number(p.usdPrice).toFixed(6);
@@ -477,7 +499,10 @@
         })
         .catch((err) => {
           console.error(err);
+          if (loading) loading.style.display = "none";
           errorBox.style.display = "block";
+          document.getElementById("token-price").textContent = "-";
+          document.getElementById("token-metrics").textContent = "-";
         });
     }
 </script>
@@ -581,16 +606,34 @@
     <a href="https://believe.app" style="color:#61c5ff;" target="_blank">$SNIF</a>
 </footer>
 <script>
-    function searchTokenMobile() {
+   function searchTokenMobile() {
       const ca = document.getElementById('ca-input-mobile').value.trim();
       const errorBox = document.getElementById('error-box-mobile');
       const resultSection = document.getElementById('mobile-result');
+      const loading = document.getElementById('loading-indicator-mobile');
 
       errorBox.style.display = 'none';
       resultSection.style.display = 'none';
+      if (loading) loading.style.display = 'block';
+
+      if (tokenInterval) clearInterval(tokenInterval);
+      if (holdersInterval) clearInterval(holdersInterval);
+
+      const logo = document.querySelector('#mobile-result .summary-header img');
+      if (logo) logo.src = '';
+      document.getElementById('mobile-fullname').textContent = '';
+      const tnReset = document.querySelector('#mobile-result .token-name');
+      if (tnReset) tnReset.textContent = '';
+      const priceEl = document.querySelector('#mobile-result .token-price');
+      if (priceEl) priceEl.textContent = 'Loading...';
+      const details = document.querySelector('#mobile-result .summary-details');
+      if (details) details.innerHTML = '';
+      const hl = document.getElementById('holders-list-mobile');
+      if (hl) hl.innerHTML = '<li>Loading...</li>';
 
       if (!/^([1-9A-HJ-NP-Za-km-z]{32,44})$/.test(ca)) {
         errorBox.style.display = 'block';
+        if (loading) loading.style.display = 'none';
         return;
       }
 
@@ -635,14 +678,37 @@
             details.innerHTML =
               `💰 Market Cap: ${marketCap} <br/> 🧪 Liquidity: ${liquidity} <br/> 💠 Supply: ${supply}`;
 
+          currentCA = ca;
+          if (loading) loading.style.display = 'none';
           resultSection.style.display = 'block';
           if (holdersInterval) clearInterval(holdersInterval);
-          fetchTopHolders(ca, solscanKey, 'holders-list-mobile');
-          holdersInterval = setInterval(() => fetchTopHolders(ca, solscanKey, 'holders-list-mobile'), 10000);
+          fetchTopHolders(currentCA, solscanKey, 'holders-list-mobile');
+          holdersInterval = setInterval(() => fetchTopHolders(currentCA, solscanKey, 'holders-list-mobile'), 10000);
+
+          if (tokenInterval) clearInterval(tokenInterval);
+          tokenInterval = setInterval(() => {
+            const pUrl = `https://solana-gateway.moralis.io/token/mainnet/${currentCA}/price`;
+            const lUrl = `https://deep-index.moralis.io/api/v2.2/tokens/${currentCA}/analytics?chain=solana`;
+            const mUrl = `https://pro-api.solscan.io/v2.0/token/meta?address=${currentCA}`;
+            Promise.all([
+              fetch(pUrl, { headers: { 'X-API-Key': moralisKey } }).then(r => r.json()),
+              fetch(lUrl, { headers: { 'X-API-Key': moralisKey } }).then(r => r.json()),
+              fetch(mUrl, { headers: { token: solscanKey } }).then(r => r.json()),
+            ]).then(([p, l, m]) => {
+              if (priceEl) priceEl.textContent = '$' + Number(p.usdPrice).toFixed(6);
+              const mc = Number(m.data.market_cap).toLocaleString();
+              const liqVal = Number(l.totalLiquidityUsd).toLocaleString();
+              const sup = Number(m.data.supply).toLocaleString();
+              if (details) details.innerHTML = `💰 Market Cap: ${mc} <br/> 🧪 Liquidity: ${liqVal} <br/> 💠 Supply: ${sup}`;
+            });
+          }, 5000);
         })
         .catch((err) => {
           console.error(err);
+          if (loading) loading.style.display = 'none';
           errorBox.style.display = 'block';
+          if (priceEl) priceEl.textContent = '-';
+          if (details) details.innerHTML = '-';
         });
     }
   </script>
@@ -658,6 +724,7 @@
 <img alt="error" src="wrong.png" style="width:80px; margin-bottom:6px;"/>
 <div style="color:#dc3545; font-weight:bold;">Something is wrong!</div>
 </div>
+<div id="loading-indicator-mobile" style="display:none; text-align:center; margin-top:10px; font-weight:bold;">Loading...</div>
 <div id="mobile-result" style="display:none; padding: 16px;">
 <div class="summary-card">
 <div class="summary-header">
