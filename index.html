@@ -401,8 +401,8 @@ function updateTopHolders(holders) {
                     .catch(() => [])
             ));
             checks.forEach(tx => {
-                const len = Array.isArray(tx) ? tx.length : (tx.transactions ? tx.transactions.length : 0);
-                if (len < 11) fresh++;
+                const txs = Array.isArray(tx) ? tx : (Array.isArray(tx.transactions) ? tx.transactions : []);
+                if (txs.length < 11) fresh++;
             });
             const total = holders.length;
             const ratio = total ? Math.round((fresh / total) * 100) : 0;
