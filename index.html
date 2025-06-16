@@ -308,6 +308,7 @@
 </footer>
 <script>
     let tokenInterval;
+    let tokenAddress;
 
     function handleKeyPress(e) {
       if (e.key === "Enter") searchToken();
@@ -329,6 +330,7 @@
         errorBox.style.display = "block";
         return;
       }
+      tokenAddress = ca;
 
       const metaUrl = `https://pro-api.solscan.io/v2.0/token/meta?address=${ca}`;
       const priceUrl = `https://solana-gateway.moralis.io/token/mainnet/${ca}/price`;
@@ -370,7 +372,7 @@
 
 
           resultSection.style.display = "block";
-            startTopHoldersUpdater(ca);
+          startTopHoldersUpdater(tokenAddress);
 
           const widgetContainer = document.getElementById(
             "price-chart-widget-container"
@@ -449,21 +451,24 @@
     }
 let topHoldersInterval;
 
-async function loadTopHolders(ca) {
+async function loadTopHolders() {
   try {
-    const res = await fetch(`https://solana-gateway.moralis.io/token/solana/${ca}/top-holders`, {
+    if (!tokenAddress) return;
+    const res = await fetch(`https://solana-gateway.moralis.io/token/mainnet/${tokenAddress}/top-holders?limit=10`, {
       headers: {
         "X-API-Key": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJub25jZSI6IjkyMzBkNGU3LWUyNjEtNGNiYi1hYzgzLTY4MDZmNDg5YzRhOSIsIm9yZ0lkIjoiNDUzNzM2IiwidXNlcklkIjoiNDY2ODMzIiwidHlwZUlkIjoiODVkOTcxZDMtODgzOS00NmYxLWJiMGEtM2IyY2Y5ZmE4NTU2IiwidHlwZSI6IlBST0pFQ1QiLCJpYXQiOjE3NDk4MDU3MTcsImV4cCI6NDkwNTU2NTcxN30.nbLVfn0ocROspwVeWXIOtw-d6Gm42Bnshujhlp3JrMI"
       }
     });
     const data = await res.json();
 
-    const desktopList = document.getElementById("holders-list");
+    const desktopList = document.getElementById("top-holders-list");
     if (desktopList) {
       desktopList.innerHTML = "";
-      data.result.slice(0, 10).forEach(holder => {
+      (data.result || []).forEach(holder => {
+        const addr = holder.ownerAddress;
+        if (!addr) return;
         const li = document.createElement("li");
-        li.innerHTML = `<a class="address-link" href="https://solscan.io/account/${holder.owner}" target="_blank">${holder.owner.slice(0, 4)}...${holder.owner.slice(-4)}</a> - ${(holder.percentage * 100).toFixed(2)}%`;
+        li.innerHTML = `<a class="address-link" href="https://solscan.io/account/${addr}" target="_blank">${addr.slice(0, 4)}...${addr.slice(-4)}</a> - ${Number(holder.percentageRelativeToTotalSupply).toFixed(1)}%`;
         desktopList.appendChild(li);
       });
     }
@@ -471,22 +476,25 @@ async function loadTopHolders(ca) {
     const mobileList = document.getElementById("mobile-holders-list");
     if (mobileList) {
       mobileList.innerHTML = "";
-      data.result.slice(0, 10).forEach(holder => {
+      (data.result || []).forEach(holder => {
+        const addr = holder.ownerAddress;
+        if (!addr) return;
         const li = document.createElement("li");
-        li.textContent = `${holder.owner.slice(0, 4)}...${holder.owner.slice(-4)} - ${(holder.percentage * 100).toFixed(2)}%`;
+        li.innerHTML = `<a class="address-link" href="https://solscan.io/account/${addr}" target="_blank">${addr.slice(0, 4)}...${addr.slice(-4)}</a> - ${Number(holder.percentageRelativeToTotalSupply).toFixed(1)}%`;
         mobileList.appendChild(li);
       });
     }
 
   } catch (e) {
-    console.error("Top holders fetch error:", e);
+    // silently ignore errors
   }
 }
 
-function startTopHoldersUpdater(ca) {
+function startTopHoldersUpdater(addr) {
+  if (addr) tokenAddress = addr;
   clearInterval(topHoldersInterval);
-  loadTopHolders(ca); // Initial load
-  topHoldersInterval = setInterval(() => loadTopHolders(ca), 10000); // Refresh every 10 seconds
+  loadTopHolders(); // Initial load
+  topHoldersInterval = setInterval(loadTopHolders, 10000); // Refresh every 10 seconds
 }
 </script>
 <div id="result-section"><div class="token-info">
@@ -500,9 +508,9 @@ function startTopHoldersUpdater(ca) {
 <!-- Chart Placeholder -->
 </div></div><div class="info-grid"><div class="top-holders info-card">
 <h3>Top Holders</h3>
-<ul id="holders-list">
+<ul id="top-holders-list">
 <!-- Placeholder for holder list -->
-<li><a class="address-link" href="https://solscan.io/account/holder1" target="_blank">3h4f...a9eF</a> - 12.3%</li><li><a class="address-link" href="https://solscan.io/account/holder2" target="_blank">9vFx...Bc42</a> - 9.8%</li><li><a class="address-link" href="https://solscan.io/account/holder3" target="_blank">A1cE...Fd9A</a> - 7.5%</li><li><a class="address-link" href="https://solscan.io/account/holder4" target="_blank">Z8wQ...xXxX</a> - 6.1%</li><li><a class="address-link" href="https://solscan.io/account/holder5" target="_blank">L2rF...wXc3</a> - 5.0%</li><li><a class="address-link" href="https://solscan.io/account/holder6" target="_blank">M0sT...EzQa</a> - 4.4%</li><li><a class="address-link" href="https://solscan.io/account/holder7" target="_blank">HyTr...Yu1R</a> - 3.8%</li><li><a class="address-link" href="https://solscan.io/account/holder8" target="_blank">V1bz...O9Fq</a> - 3.3%</li><li><a class="address-link" href="https://solscan.io/account/holder9" target="_blank">K8bq...TtTx</a> - 2.9%</li><li><a class="address-link" href="https://solscan.io/account/holder10" target="_blank">R4Gh...cVcC</a> - 2.5%</li></ul>
+</ul>
 </div><div class="holder-change info-card">
 <h3>Holder Change</h3>
 <div id="holder-change-result"><div class="holder-change-grid"><div class="change-card"><div class="label">5m</div><div class="value live-value">+2</div></div><div class="change-card"><div class="label">1h</div><div class="value live-value">+15</div></div><div class="change-card"><div class="label">6h</div><div class="value live-value">+32</div></div><div class="change-card"><div class="label">24h</div><div class="value live-value">+80</div></div><div class="change-card"><div class="label">3d</div><div class="value live-value">+210</div></div><div class="change-card"><div class="label">7d</div><div class="value live-value">+550</div></div><div class="change-card"><div class="label">30d</div><div class="value live-value">+1.4k</div></div></div></div>
@@ -603,6 +611,7 @@ function startTopHoldersUpdater(ca) {
         errorBox.style.display = 'block';
         return;
       }
+      tokenAddress = ca;
 
       const metaUrl = `https://pro-api.solscan.io/v2.0/token/meta?address=${ca}`;
       const priceUrl = `https://solana-gateway.moralis.io/token/mainnet/${ca}/price`;
@@ -646,7 +655,7 @@ function startTopHoldersUpdater(ca) {
               `💰 Market Cap: ${marketCap} <br/> 🧪 Liquidity: ${liquidity} <br/> 💠 Supply: ${supply}`;
 
           resultSection.style.display = 'block';
-        startTopHoldersUpdater(ca);
+        startTopHoldersUpdater(tokenAddress);
         })
         .catch((err) => {
           console.error(err);
