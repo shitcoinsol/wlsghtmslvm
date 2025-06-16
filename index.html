@@ -419,7 +419,9 @@
 
           currentCA = ca;
           if (loading) loading.style.display = "none";
+          console.log('Displaying PC results');
           resultSection.style.display = "block";
+          resultSection.style.visibility = "visible";
           if (holdersInterval) clearInterval(holdersInterval);
           fetchTopHolders(currentCA, solscanKey);
           holdersInterval = setInterval(() => fetchTopHolders(currentCA, solscanKey), 10000);
@@ -678,9 +680,11 @@
             details.innerHTML =
               `💰 Market Cap: ${marketCap} <br/> 🧪 Liquidity: ${liquidity} <br/> 💠 Supply: ${supply}`;
 
-          currentCA = ca;
-          if (loading) loading.style.display = 'none';
-          resultSection.style.display = 'block';
+            currentCA = ca;
+            if (loading) loading.style.display = 'none';
+            console.log('Displaying mobile results');
+            resultSection.style.display = 'block';
+            resultSection.style.visibility = 'visible';
           if (holdersInterval) clearInterval(holdersInterval);
           fetchTopHolders(currentCA, solscanKey, 'holders-list-mobile');
           holdersInterval = setInterval(() => fetchTopHolders(currentCA, solscanKey, 'holders-list-mobile'), 10000);
