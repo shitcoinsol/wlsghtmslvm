@@ -824,53 +824,5 @@ async function fetchDevHistory(ca, key) {
   }
 }
 </script>
-<section id="recent-swaps" style="padding:20px;">
-  <h3 style="margin-bottom:10px;">Recent Buys / Sells</h3>
-  <ul id="swap-list" style="list-style:none;padding:0;margin:0;"></ul>
-</section>
-<script>
-let currentCA = "EKpQGSJtjMFqKZ9KQanSqYXRcF8fBopzLHYxdM65zcjm"; // default token
-
-async function fetchRecentSwaps(ca) {
-  try {
-    const res = await fetch(`https://solana-gateway.moralis.io/token/mainnet/${ca}/swaps?order=DESC`, {
-      headers: {
-        accept: 'application/json',
-        'X-API-Key': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJub25jZSI6IjkyMzBkNGU3LWUyNjEtNGNiYi1hYzgzLTY4MDZmNDg5YzRhOSIsIm9yZ0lkIjoiNDUzNzM2IiwidXNlcklkIjoiNDY2ODMzIiwidHlwZUlkIjoiODVkOTcxZDMtODgzOS00NmYxLWJiMGEtM2IyY2Y5ZmE4NTU2IiwidHlwZSI6IlBST0pFQ1QiLCJpYXQiOjE3NDk4MDU3MTcsImV4cCI6NDkwNTU2NTcxN30.nbLVfn0ocROspwVeWXIOtw-d6Gm42Bnshujhlp3JrMI'
-      }
-    });
-    const data = await res.json();
-    const list = document.getElementById('swap-list');
-    if (!list) return;
-    const items = (data.result || [])
-      .filter(tx => Number(tx.totalValueUsd) >= 20)
-      .sort((a,b) => b.blockTimestamp - a.blockTimestamp)
-      .slice(0, 3);
-    list.innerHTML = '';
-    for (const tx of items) {
-      const li = document.createElement('li');
-      const type = tx.transactionType === 'buy' ? 'Buy' : 'Sell';
-      const shortAddr = `${tx.walletAddress.slice(0,4)}...${tx.walletAddress.slice(-4)}`;
-      const amount = Number(tx.totalValueUsd);
-      let displayAmount = '$' + amount.toFixed(2);
-      if (amount >= 1e6) displayAmount = '$' + (amount/1e6).toFixed(1) + 'm';
-      else if (amount >= 1e3) displayAmount = '$' + (amount/1e3).toFixed(1) + 'k';
-      const minutes = Math.floor((Date.now()/1000 - tx.blockTimestamp)/60);
-      const link = `<a href="https://solscan.io/account/${tx.walletAddress}" target="_blank" style="text-decoration:none; color:inherit;">${shortAddr}</a>`;
-      li.innerHTML = `${type} by ${link} · ${displayAmount} · ${minutes}m ago`;
-      li.style.color = type === 'Buy' ? 'green' : 'red';
-      li.style.opacity = 0;
-      li.style.transition = 'opacity 0.4s ease';
-      list.appendChild(li);
-      setTimeout(() => { li.style.opacity = 1; }, 100);
-    }
-  } catch (e) {
-    console.error(e);
-  }
-}
-
-fetchRecentSwaps(currentCA);
-setInterval(() => fetchRecentSwaps(currentCA), 3000);
-</script>
 </body>
 </html>
