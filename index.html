@@ -401,9 +401,11 @@
           const tn = document.getElementById("token-name");
           if (tn.firstChild) tn.firstChild.nodeValue = `$${meta.data.symbol}`;
 
-          const pumpImg = tn.querySelector('img[alt="pump.fun"]');
+          const pumpImg = document.getElementById("pump-logo");
           const isPump = (meta.data.metadata?.createdOn || "").includes("pump.fun");
-          pumpImg.style.display = isPump ? "inline-block" : "none";
+          if (pumpImg) {
+            pumpImg.style.display = isPump ? "inline-block" : "none";
+          }
 
           document.getElementById("token-price").textContent =
             "$" + Number(price.usdPrice).toFixed(6);
@@ -511,7 +513,7 @@
 <div id="result-section"><div class="token-info">
 <img alt="Token Logo" id="token-logo" src=""/>
 <div><div id="token-fullname" style="font-size: 16px; color: #555;">Token Name Example</div>
-<div id="token-name">$TOKEN<img alt="pump.fun" src="pump_fun_logo.webp" style="max-height: 18px; width: auto; margin-left: 6px; vertical-align: middle;"/></div>
+<div id="token-name">$TOKEN<img id="pump-logo" alt="pump.fun" src="pump_fun_logo.webp" style="display: none; width: 30px;"/></div>
 <div class="live-value" id="token-price">$0.012 </div>
 <div id="token-metrics">Market Cap: -- · Liquidity: -- · Supply: --</div>
 </div>
