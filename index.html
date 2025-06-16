@@ -364,7 +364,7 @@ function updateTopHolders(holders) {
       return /^([1-9A-HJ-NP-Za-km-z]{32,44})$/.test(addr);
     }
 
-      function fetchTopHolders(ca, apiKey, listId = 'holders-list') {
+    function fetchTopHolders(ca, apiKey, listId = 'holders-list') {
         const list = document.getElementById(listId);
         if (!list) return;
         const url = `https://pro-api.solscan.io/v2.0/token/holders?address=${ca}&page=1&page_size=10`;
@@ -383,6 +383,37 @@ function updateTopHolders(holders) {
           console.error(err);
           list.innerHTML = '<li>Error loading holders</li>';
         });
+    }
+
+    async function fetchFreshWalletRatio(ca, solscanKey, heliusKey) {
+        const countEls = document.querySelectorAll('#fresh-wallet-count, #fresh-wallet-count-mobile');
+        const pctEls = document.querySelectorAll('#fresh-wallet-percentage, #fresh-wallet-percentage-mobile');
+        countEls.forEach(el => el.textContent = '🟢 Fresh Wallets: 0 / 30');
+        pctEls.forEach(el => el.textContent = '📈 Ratio: 0%');
+        try {
+            const res = await fetch(`https://pro-api.solscan.io/v2.0/token/holders?address=${ca}&page=1&page_size=30`, { headers: { token: solscanKey } });
+            const data = await res.json();
+            const holders = data?.data?.items || [];
+            let fresh = 0;
+            const checks = await Promise.all(holders.map(h =>
+                fetch(`https://api.helius.xyz/v0/addresses/${h.owner}/transactions?api-key=${heliusKey}&limit=11`)
+                    .then(r => r.json())
+                    .catch(() => [])
+            ));
+            checks.forEach(tx => {
+                const len = Array.isArray(tx) ? tx.length : (tx.transactions ? tx.transactions.length : 0);
+                if (len < 11) fresh++;
+            });
+            const total = holders.length;
+            const ratio = total ? Math.round((fresh / total) * 100) : 0;
+            let emoji = '🟢';
+            if (fresh >= 15) emoji = '🔴';
+            else if (fresh >= 10) emoji = '🟡';
+            countEls.forEach(el => el.textContent = `${emoji} Fresh Wallets: ${fresh} / ${total}`);
+            pctEls.forEach(el => el.textContent = `📈 Ratio: ${ratio}%`);
+        } catch (e) {
+            console.error(e);
+        }
     }
 
     function searchToken() {
@@ -406,8 +437,10 @@ function updateTopHolders(holders) {
         "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJjcmVhdGVkQXQiOjE3NDk4NjAwMjIwMDUsImVtYWlsIjoid2F4amluaG8wMkBnbWFpbC5jb20iLCJhY3Rpb24iOiJ0b2tlbi1hcGkiLCJhcGlWZXJzaW9uIjoidjIiLCJpYXQiOjE3NDk4NjAwMjJ9.I1laMt2a0wIiMeQ0JFEDDWWqvwLQvnSjcS0mdvy-vM0";
       const moralisKey =
         "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJub25jZSI6IjkyMzBkNGU3LWUyNjEtNGNiYi1hYzgzLTY4MDZmNDg5YzRhOSIsIm9yZ0lkIjoiNDUzNzM2IiwidXNlcklkIjoiNDY2ODMzIiwidHlwZUlkIjoiODVkOTcxZDMtODgzOS00NmYxLWJiMGEtM2IyY2Y5ZmE4NTU2IiwidHlwZSI6IlBST0pFQ1QiLCJpYXQiOjE3NDk4MDU3MTcsImV4cCI6NDkwNTU2NTcxN30.nbLVfn0ocROspwVeWXIOtw-d6Gm42Bnshujhlp3JrMI";
+      const heliusKey = '07bae6e7-fc44-4501-bd71-958318efbeaf';
 
       showDevHistoryLoading();
+      fetchFreshWalletRatio(ca, solscanKey, heliusKey);
 
       Promise.all([
         fetch(metaUrl, { headers: { token: solscanKey } }).then((r) => r.json()),
@@ -553,19 +586,12 @@ function updateTopHolders(holders) {
 </div><div class="dev-activity info-card">
 <h3>Dev Activity</h3>
 <ul id="dev-tx-list"><li><a class="address-link" href="https://solscan.io/tx/devtx1" target="_blank">Sent 25,000 SNIFF</a></li><li><a class="address-link" href="https://solscan.io/tx/devtx2" target="_blank">Sent 14,500 BARK</a></li><li><a class="address-link" href="https://solscan.io/tx/devtx3" target="_blank">Sent 6,200 SNOUT</a></li></ul>
-</div></div><div class="buy-sell-ratio info-card">
-<h3>Buy/Sell Ratio</h3>
-<select>
-<option>5m</option>
-<option>1h</option>
-<option>6h</option>
-<option>24h</option>
-</select>
-<div class="ratio-bar">
-<div class="buy-bar" style="width: 64%"></div>
-<div class="sell-bar" style="width: 36%"></div>
-</div>
-<div>Buy: 64% · Sell: 36%</div>
+</div></div><div id="fresh-wallet-ratio" class="info-card" style="margin-top: 20px;">
+  <h3>📊 Fresh Wallet Ratio</h3>
+  <p>This metric analyzes the top 20 holders of this token<br>
+     and determines how many of them are newly created wallets.</p>
+  <p id="fresh-wallet-count">🟢 Fresh Wallets: 0 / 30</p>
+  <p id="fresh-wallet-percentage">📈 Ratio: 0%</p>
 </div></div></div><div class="mobile-version">
 <div style="text-align:center; padding: 20px;">
 <img alt="snif.fun" src="logo.png" style="width:80px;"/>
@@ -648,8 +674,10 @@ function updateTopHolders(holders) {
         'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJjcmVhdGVkQXQiOjE3NDk4NjAwMjIwMDUsImVtYWlsIjoid2F4amluaG8wMkBnbWFpbC5jb20iLCJhY3Rpb24iOiJ0b2tlbi1hcGkiLCJhcGlWZXJzaW9uIjoidjIiLCJpYXQiOjE3NDk4NjAwMjJ9.I1laMt2a0wIiMeQ0JFEDDWWqvwLQvnSjcS0mdvy-vM0';
       const moralisKey =
         'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJub25jZSI6IjkyMzBkNGU3LWUyNjEtNGNiYi1hYzgzLTY4MDZmNDg5YzRhOSIsIm9yZ0lkIjoiNDUzNzM2IiwidXNlcklkIjoiNDY2ODMzIiwidHlwZUlkIjoiODVkOTcxZDMtODgzOS00NmYxLWJiMGEtM2IyY2Y5ZmE4NTU2IiwidHlwZSI6IlBST0pFQ1QiLCJpYXQiOjE3NDk4MDU3MTcsImV4cCI6NDkwNTU2NTcxN30.nbLVfn0ocROspwVeWXIOtw-d6Gm42Bnshujhlp3JrMI';
+      const heliusKey = '07bae6e7-fc44-4501-bd71-958318efbeaf';
 
       showDevHistoryLoading();
+      fetchFreshWalletRatio(ca, solscanKey, heliusKey);
 
       Promise.all([
         fetch(metaUrl, { headers: { token: solscanKey } }).then((r) => r.json()),
@@ -749,6 +777,13 @@ function updateTopHolders(holders) {
 <li>Sent 25,000 SNIFF</li>
 <li>Sent 14,500 BARK</li>
 </ul>
+</div>
+<div class="mobile-section" id="fresh-wallet-ratio-mobile" style="margin-top: 20px;">
+  <h3 style="font-size:16px;">📊 Fresh Wallet Ratio</h3>
+  <p style="font-size:14px;">This metric analyzes the top 20 holders of this token<br>
+     and determines how many of them are newly created wallets.</p>
+  <p id="fresh-wallet-count-mobile" style="font-size:14px;">🟢 Fresh Wallets: 0 / 30</p>
+  <p id="fresh-wallet-percentage-mobile" style="font-size:14px;">📈 Ratio: 0%</p>
 </div>
 <div class="mobile-section">
 <h3>Dev Create History</h3>
