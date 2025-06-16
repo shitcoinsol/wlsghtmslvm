@@ -1,0 +1,1001 @@
+
+<!DOCTYPE html>
+
+<html lang="en">
+<head><link href="logo.png" rel="icon" type="image/png"/>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>snif.fun</title>
+<style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background-color: #f9fbfc;
+      color: #111;
+    }
+    header {
+      text-align: center;
+      padding: 40px 0 20px;
+    }
+    header img {
+      width: 100px;
+    }
+    #search-section {
+      text-align: center;
+      margin: 30px 0;
+    }
+    #search-section input[type="text"] {
+      padding: 10px;
+      width: 300px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+    }
+    #search-section button {
+      padding: 10px 20px;
+      background-color: #61c5ff;
+      border: none;
+      border-radius: 8px;
+      color: white;
+      margin-left: 10px;
+      cursor: pointer;
+    }
+    #result-section {
+      display: none;
+      max-width: 800px;
+      margin: 40px auto;
+      padding: 20px;
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.05);
+    }
+    .token-info {
+      background-color: #f0faff;
+      border: 1px solid #cceeff;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 0 6px rgba(97, 197, 255, 0.3);
+    
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      margin-bottom: 20px;
+    }
+    .token-info img {
+      width: 48px;
+      height: 48px;
+    }
+    .chart-container {
+      border: 2px solid #61c5ff;
+      box-shadow: inset 0 0 10px rgba(97, 197, 255, 0.2);
+    
+      width: 100%;
+      height: 400px;
+      background-color: #eee;
+      border-radius: 12px;
+      margin-bottom: 20px;
+    }
+    .details-section h3 {
+      border-left: 4px solid #61c5ff;
+      padding-left: 10px;
+      color: #333;
+    
+      margin-top: 30px;
+    }
+    .holder-change, .buy-sell-ratio, .recent-tx, .dev-activity {
+      margin-bottom: 30px;
+    }
+    .address-link {
+      text-decoration: none;
+      color: #007bff;
+      font-size: 14px;
+      word-break: break-all;
+    }
+    #holders-list, #holders-list-mobile {
+      padding-left: 20px;
+      list-style: none;
+      margin: 0;
+      word-break: break-word;
+    }
+    #recent-swaps-list {
+      padding-left: 0;
+      list-style: none;
+      font-size: 14px;
+      line-height: 1.5;
+      word-break: break-word;
+    }
+    @media (max-width: 600px) {
+      #recent-swaps-list li {
+        font-size: 13px;
+      }
+    }
+    .ratio-bar {
+      height: 20px;
+      display: flex;
+      border-radius: 8px;
+      overflow: hidden;
+      margin-top: 8px;
+    }
+    .buy-bar {
+      background-color: #28a745;
+      height: 100%;
+    }
+    .sell-bar {
+      background-color: #dc3545;
+      height: 100%;
+    }
+    footer {
+      position: fixed;
+      bottom: 10px;
+      width: 100%;
+      text-align: center;
+      font-size: 14px;
+    }
+    footer a {
+      margin: 0 10px;
+      text-decoration: none;
+      color: #61c5ff;
+    }
+  
+  body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    line-height: 1.6;
+    color: #222;
+    background-color: #f9fbfc;
+  }
+  input[type="text"] {
+    font-size: 16px;
+  }
+  button {
+    font-size: 16px;
+    transition: background 0.3s ease;
+  }
+  button:hover {
+    background-color: #49b0e6;
+  }
+  #result-section {
+    transition: all 0.4s ease;
+  }
+  h3 {
+    font-size: 20px;
+    color: #222;
+    margin-bottom: 10px;
+  }
+  ul {
+    padding-left: 20px;
+  }
+  li {
+    margin-bottom: 6px;
+  }
+  .token-info div {
+    font-size: 16px;
+  }
+  #token-name {
+    font-size: 22px;
+    font-weight: bold;
+    margin-bottom: 6px;
+  }
+  #token-price {
+    font-size: 20px;
+    color: #28a745;
+    margin-bottom: 4px;
+  }
+  #token-metrics {
+    font-size: 14px;
+    color: #666;
+  }
+  .chart-container {
+    background: linear-gradient(135deg, #e0f7ff, #f0fbff);
+  }
+
+  .info-card {
+    background-color: #fff;
+    border: 1px solid #e0e0e0;
+    border-radius: 12px;
+    padding: 16px 20px;
+    margin-bottom: 24px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.04);
+  }
+  .info-card h3 {
+    margin-top: 0;
+    border-left: 4px solid #61c5ff;
+    padding-left: 10px;
+    color: #222;
+  }
+
+/* Responsive Display */
+.pc-version { display: block; }
+.mobile-version { display: none; }
+
+@media (max-width: 768px) {
+  .pc-version { display: none; }
+  .mobile-version { display: block; }
+}
+
+@media (min-width: 1024px) {
+  .info-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    margin-top: 30px;
+  }
+}
+
+/* Live value styles */
+.live-value {
+  font-weight: bold;
+  color: #28a745;
+  transition: color 0.3s ease;
+}
+
+/* Flash animations for changes */
+.value-flash-up {
+  animation: flash-green 0.6s;
+}
+.value-flash-down {
+  animation: flash-red 0.6s;
+}
+
+@keyframes flash-green {
+  0% { background-color: #d4f8df; }
+  100% { background-color: transparent; }
+}
+
+@keyframes flash-red {
+  0% { background-color: #fcdede; }
+  100% { background-color: transparent; }
+}
+
+/* Trend icons */
+.trend-up {
+  color: #28a745;
+  margin-left: 4px;
+}
+.trend-down {
+  color: #dc3545;
+  margin-left: 4px;
+}
+
+/* Pulse dot for live feed */
+.pulse-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #61c5ff;
+  animation: pulse 1.5s infinite;
+  display: inline-block;
+  margin-right: 6px;
+}
+
+@keyframes pulse {
+  0% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.4); opacity: 0.5; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+.holder-change-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.change-card {
+  background: #f9fbfc;
+  border: 1px solid #d9e3ea;
+  border-radius: 10px;
+  padding: 10px;
+  text-align: center;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+
+.change-card .label {
+  font-size: 13px;
+  color: #666;
+}
+
+.change-card .value {
+  font-size: 18px;
+  font-weight: bold;
+  color: #28a745;
+  margin-top: 4px;
+  transition: color 0.3s ease;
+}
+
+/* Dev activity tags */
+.dev-activity .tag {
+  padding: 2px 6px;
+  border-radius: 4px;
+  color: #fff;
+  font-size: 12px;
+  margin-right: 4px;
+}
+.dev-activity .tag.buy { background-color: #28a745; }
+.dev-activity .tag.sell { background-color: #dc3545; }
+.dev-activity .tag.sent { background-color: #6c757d; }
+
+/* Responsive toggling */
+.pc-version { display: block; }
+.mobile-version, .footer-mobile { display: none; }
+@media (max-width: 768px) {
+  .pc-version { display: none; }
+  .mobile-version, .footer-mobile { display: block; }
+}
+</style>
+</head>
+<body><div class="pc-version">
+<header>
+<img alt="snif.fun logo" src="logo.png"/>
+<div style="font-size: 32px; font-weight: bold; color: #61c5ff; margin-top: 12px;">snif.fun</div></header>
+<div id="search-section">
+<input id="ca-input" onkeypress="handleKeyPress(event)" placeholder="Enter CA (contract address)" type="text"/>
+<button onclick="searchToken()">Search</button>
+</div><div id="error-box" style="
+        display: none;
+        margin-top: 20px;
+        text-align: center;
+    "><img src="wrong.png" style="width: 100px; margin-bottom: 10px;"/><div style="font-size: 18px; color: #dc3545; font-weight: bold;">Something is wrong!</div></div>
+<footer style="position: fixed; bottom: 0; width: 100%; background: white; border-top: 1px solid #e0e0e0; padding: 10px 0; text-align: center; font-size: 14px; z-index: 999;">
+<a href="https://x.com/sniffun" style="color: #444; font-weight: 500; text-decoration: none; margin: 0 10px;" target="_blank">snif.fun</a>
+    ·
+    <a href="https://believe.app" style="color: #444; font-weight: 500; text-decoration: none; margin: 0 10px;" target="_blank">$SNIF</a>
+</footer>
+<script>
+// Override top holders update to prevent flickering
+function updateTopHolders(holders) {
+  const holdersList = document.getElementById("holders-list");
+  if (!holdersList) return;
+
+  const existingItems = holdersList.querySelectorAll("li");
+  holders.forEach((holder, i) => {
+    const shortAddr = holder.address.slice(0, 4) + "..." + holder.address.slice(-4);
+    const liHTML = `<a class="address-link" href="https://solscan.io/account/${holder.address}" target="_blank">${shortAddr}</a> - ${holder.percentage.toFixed(1)}%`;
+
+    if (existingItems[i]) {
+      existingItems[i].innerHTML = liHTML;
+    } else {
+      const li = document.createElement("li");
+      li.innerHTML = liHTML;
+      holdersList.appendChild(li);
+    }
+  });
+
+  // Optional: hide extra items if new list is shorter
+  for (let j = holders.length; j < existingItems.length; j++) {
+    existingItems[j].style.display = "none";
+  }
+}
+</script><script>
+    let tokenInterval;
+    let holdersInterval;
+    let currentCA = '';
+
+    function handleKeyPress(e) {
+      if (e.key === "Enter") searchToken();
+    }
+
+    function isValidSolanaAddress(addr) {
+      return /^([1-9A-HJ-NP-Za-km-z]{32,44})$/.test(addr);
+    }
+
+    function fetchTopHolders(ca, apiKey, listId = 'holders-list') {
+        const list = document.getElementById(listId);
+        if (!list) return;
+        const url = `https://pro-api.solscan.io/v2.0/token/holders?address=${ca}&page=1&page_size=10`;
+        fetch(url, { headers: { token: apiKey } })
+        .then(r => r.json())
+        .then(data => {
+          if (!data || !data.data) throw new Error('holder fail');
+          list.innerHTML = data.data.items.slice(0, 10).map(it => {
+            const addr = it.owner;
+            const pct = Number(it.percentage || 0);
+            const short = `${addr.slice(0,4)}...${addr.slice(-4)}`;
+            return `<li><a class="address-link" href="https://solscan.io/account/${addr}" target="_blank">${short}</a> - ${pct.toFixed(1)}%</li>`;
+          }).join('');
+        })
+        .catch(err => {
+          console.error(err);
+          list.innerHTML = '<li>Error loading holders</li>';
+        });
+    }
+
+    async function fetchFreshWalletRatio(ca, solscanKey, heliusKey) {
+        const countEls = document.querySelectorAll('#fresh-wallet-count, #fresh-wallet-count-mobile');
+        const pctEls = document.querySelectorAll('#fresh-wallet-percentage, #fresh-wallet-percentage-mobile');
+        countEls.forEach(el => el.textContent = '🟢 Fresh Wallets: 0 / 30');
+        pctEls.forEach(el => el.textContent = '📈 Ratio: 0%');
+        try {
+            const res = await fetch(`https://pro-api.solscan.io/v2.0/token/holders?address=${ca}&page=1&page_size=30`, { headers: { token: solscanKey } });
+            const data = await res.json();
+            const holders = data?.data?.items || [];
+            let fresh = 0;
+            const checks = await Promise.all(holders.map(h =>
+                fetch(`https://api.helius.xyz/v0/addresses/${h.owner}/transactions?api-key=${heliusKey}&limit=11`)
+                    .then(r => r.json())
+                    .catch(() => [])
+            ));
+            checks.forEach(tx => {
+                const txs = Array.isArray(tx) ? tx : (Array.isArray(tx.transactions) ? tx.transactions : []);
+                if (txs.length < 11) fresh++;
+            });
+            const total = holders.length;
+            const ratio = total ? Math.round((fresh / total) * 100) : 0;
+            let emoji = '🟢';
+            if (fresh >= 15) emoji = '🔴';
+            else if (fresh >= 10) emoji = '🟡';
+            countEls.forEach(el => el.textContent = `${emoji} Fresh Wallets: ${fresh} / ${total}`);
+            pctEls.forEach(el => el.textContent = `📈 Ratio: ${ratio}%`);
+        } catch (e) {
+            console.error(e);
+        }
+    }
+
+    function searchToken() {
+      const ca = document.getElementById("ca-input").value.trim();
+      const errorBox = document.getElementById("error-box");
+      const resultSection = document.getElementById("result-section");
+
+      errorBox.style.display = "none";
+      resultSection.style.display = "none";
+
+      if (!isValidSolanaAddress(ca)) {
+        errorBox.style.display = "block";
+        return;
+      }
+      currentCA = ca;
+
+      const metaUrl = `https://pro-api.solscan.io/v2.0/token/meta?address=${ca}`;
+      const priceUrl = `https://solana-gateway.moralis.io/token/mainnet/${ca}/price`;
+      
+      const solscanKey =
+        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJjcmVhdGVkQXQiOjE3NDk4NjAwMjIwMDUsImVtYWlsIjoid2F4amluaG8wMkBnbWFpbC5jb20iLCJhY3Rpb24iOiJ0b2tlbi1hcGkiLCJhcGlWZXJzaW9uIjoidjIiLCJpYXQiOjE3NDk4NjAwMjJ9.I1laMt2a0wIiMeQ0JFEDDWWqvwLQvnSjcS0mdvy-vM0";
+      const moralisKey =
+        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJub25jZSI6IjkyMzBkNGU3LWUyNjEtNGNiYi1hYzgzLTY4MDZmNDg5YzRhOSIsIm9yZ0lkIjoiNDUzNzM2IiwidXNlcklkIjoiNDY2ODMzIiwidHlwZUlkIjoiODVkOTcxZDMtODgzOS00NmYxLWJiMGEtM2IyY2Y5ZmE4NTU2IiwidHlwZSI6IlBST0pFQ1QiLCJpYXQiOjE3NDk4MDU3MTcsImV4cCI6NDkwNTU2NTcxN30.nbLVfn0ocROspwVeWXIOtw-d6Gm42Bnshujhlp3JrMI";
+      const heliusKey = '07bae6e7-fc44-4501-bd71-958318efbeaf';
+
+      showDevHistoryLoading();
+      fetchFreshWalletRatio(ca, solscanKey, heliusKey);
+
+      Promise.all([
+        fetch(metaUrl, { headers: { token: solscanKey } }).then((r) => r.json()),
+        fetch(priceUrl, { headers: { "X-API-Key": moralisKey } }).then((r) => r.json()),
+              ])
+        .then(([meta, price, liq]) => {
+          if (!meta || !meta.success) throw new Error("meta fail");
+
+          document.getElementById("token-logo").src = meta.data.icon || "";
+          document.getElementById("token-fullname").textContent = meta.data.name;
+
+          const tn = document.getElementById("token-name");
+          if (tn.firstChild) tn.firstChild.nodeValue = `$${meta.data.symbol}`;
+
+          const pumpImg = tn.querySelector('img[alt="pump.fun"]');
+          const isPump = (meta.data.metadata?.createdOn || "").includes("pump.fun");
+          pumpImg.style.display = isPump ? "inline-block" : "none";
+
+          document.getElementById("token-price").textContent =
+            "$" + Number(price.usdPrice).toFixed(6);
+
+          const marketCap = Number(meta.data.market_cap).toLocaleString();          const supply = Number(meta.data.supply).toLocaleString();
+
+          document.getElementById(
+            "token-metrics"
+          ).textContent = `Market Cap: ${marketCap} · Supply: ${supply}`;
+
+
+          resultSection.style.display = "block";
+          fetchDevHistory(ca, solscanKey);
+          fetchDevActivity(ca, solscanKey, heliusKey);
+          if (holdersInterval) clearInterval(holdersInterval);
+          fetchTopHolders(ca, solscanKey);
+          holdersInterval = setInterval(() => fetchTopHolders(ca, solscanKey), 10000);
+
+          const widgetContainer = document.getElementById(
+            "price-chart-widget-container"
+          );
+          if (widgetContainer) {
+            widgetContainer.innerHTML = "";
+            const widgetScript = document.createElement("script");
+            widgetScript.type = "text/javascript";
+            widgetScript.textContent = `
+            (function() {
+              function loadWidget() {
+                if (typeof window.createMyWidget === 'function') {
+                  window.createMyWidget('price-chart-widget-container', {
+                    autoSize: true,
+                    chainId: 'solana',
+                    tokenAddress: '${ca}',
+                    showHoldersChart: true,
+                    defaultInterval: '1D',
+                    timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone ?? 'Etc/UTC',
+                    theme: 'moralis',
+                    locale: 'en',
+                    backgroundColor: '#071321',
+                    gridColor: '#0d2035',
+                    textColor: '#68738D',
+                    candleUpColor: '#4CE666',
+                    candleDownColor: '#E64C4C',
+                    hideLeftToolbar: false,
+                    hideTopToolbar: false,
+                    hideBottomToolbar: false
+                  });
+                } else {
+                  console.error('createMyWidget function is not defined.');
+                }
+              }
+              if (!document.getElementById('moralis-chart-widget')) {
+                var script = document.createElement('script');
+                script.id = 'moralis-chart-widget';
+                script.src = 'https://moralis.com/static/embed/chart.js';
+                script.type = 'text/javascript';
+                script.async = true;
+                script.onload = loadWidget;
+                document.body.appendChild(script);
+              } else {
+                loadWidget();
+              }
+            })();
+            `;
+            widgetContainer.appendChild(widgetScript);
+          }
+
+
+          if (tokenInterval) clearInterval(tokenInterval);
+          tokenInterval = setInterval(() => {
+            Promise.all([
+              fetch(priceUrl, { headers: { "X-API-Key": moralisKey } }).then((r) => r.json()),
+                            fetch(metaUrl, { headers: { token: solscanKey } }).then((r) => r.json()),
+            ]).then(([p, l, m]) => {
+              document.getElementById("token-price").textContent =
+                "$" + Number(p.usdPrice).toFixed(6);
+
+              const mc = Number(m.data.market_cap).toLocaleString();              const sup = Number(m.data.supply).toLocaleString();
+
+              document.getElementById(
+                "token-metrics"
+              ).textContent = `Market Cap: ${mc} · Supply: ${sup}`;
+            });
+          }, 5000);
+        })
+        .catch((err) => {
+          console.error(err);
+          errorBox.style.display = "block";
+        });
+    }
+</script>
+<div id="result-section"><div class="token-info">
+<img alt="Token Logo" id="token-logo" src=""/>
+<div><div id="token-fullname" style="font-size: 16px; color: #555;">Token Name Example</div>
+<div id="token-name">$TOKEN<img alt="pump.fun" src="pump_fun_logo.webp" style="max-height: 18px; width: auto; margin-left: 6px; vertical-align: middle;"/></div>
+<div class="live-value" id="token-price">$0.012 </div>
+<div id="token-metrics">Market Cap: -- · Liquidity: -- · Supply: --</div>
+</div>
+</div><div class="chart-container"><div id="price-chart-widget-container" style="width: 100%; height:100%">
+<!-- Chart Placeholder -->
+</div></div><div class="info-grid"><div class="top-holders info-card">
+<h3>Top Holders</h3>
+  <ul id="holders-list">
+  </ul>
+</div><div class="holder-change info-card">
+<h3>Dev Create History (beta)</h3>
+<div id="holder-change-result">
+<div style="overflow-x: auto;">
+<table style="width: 100%; border-collapse: collapse; font-size: 12px;">
+<thead>
+<tr style="background-color: #f0faff;">
+<th style="padding: 4px 6px; text-align: left;">Name</th>
+<th style="padding: 4px 6px; text-align: left;">Created</th>
+<th style="padding: 4px 6px; text-align: left;">MCap</th>
+<th style="padding: 4px 6px; text-align: left;">PumpFun?</th>
+</tr>
+</thead>
+<tbody id="dev-token-history">
+<!-- JS inserts rows here -->
+</tbody>
+</table>
+</div>
+</div>
+</div><div class="recent-tx info-card">
+<h3>Recent Buys / Sells</h3>
+<ul id="recent-swaps-list"></ul>
+</div></div><div id="fresh-wallet-ratio" class="info-card" style="margin-top: 20px;">
+  <h3>📊 Fresh Wallet Ratio</h3>
+  <p id="fresh-wallet-count">🟢 Fresh Wallets: 0 / 30</p>
+  <p id="fresh-wallet-percentage">📈 Ratio: 0%</p>
+</div></div></div><div class="mobile-version">
+<div style="text-align:center; padding: 20px;">
+<img alt="snif.fun" src="logo.png" style="width:80px;"/>
+<div style="font-size: 28px; font-weight: bold; margin-top: 10px;">snif.fun</div>
+<input onkeypress="if(event.key==='Enter')searchTokenMobile()" placeholder="Enter CA" style="width: 80%; padding: 10px; border-radius: 8px; border: 1px solid #ccc; margin-top: 20px;" type="text"/>
+<button onclick="searchTokenMobile()" style="margin-top: 12px; padding: 10px 16px; background:#61c5ff; border:none; border-radius:8px; color:white;">Search</button>
+</div>
+<div id="mobile-result" style="display:none; padding: 16px;">
+<div style="background:#fff; border-radius:12px; padding:16px; box-shadow: 0 0 4px rgba(0,0,0,0.1);">
+<div style="display:flex; align-items:center; gap:12px;">
+<img src="logo.png" style="width:40px; height:40px;"/>
+<div>
+<div style="font-weight:bold;">$TOKEN</div>
+<div style="color:#28a745;">$0.00</div>
+</div>
+</div>
+<div style="margin-top:12px; font-size:14px; color:#666;">
+        💰 Market Cap: -- <br/>
+        
+        💠 Supply: --
+      </div>
+</div>
+<div style="margin-top:20px;">
+<h3 style="font-size:16px; border-left:4px solid #61c5ff; padding-left:8px;">Top Holders</h3>
+  <ul id="holders-list-mobile" style="font-size:14px;">
+  </ul>
+</div>
+<div style="margin-top:20px;">
+<h3 style="font-size:16px; border-left:4px solid #61c5ff; padding-left:8px;">Holder Change</h3>
+<ul style="font-size:14px;">
+<li>5m: +2</li>
+<li>1h: +15</li>
+<li>6h: +32</li>
+<li>24h: +80</li>
+<li>3d: +210</li>
+<li>7d: +550</li>
+<li>30d: +1.4k</li>
+</ul>
+</div>
+<div style="margin-top:20px;">
+<h3 style="font-size:16px; border-left:4px solid #61c5ff; padding-left:8px;">Recent Buys / Sells</h3>
+<ul style="font-size:14px;">
+<li><span style="color:green;">Buy</span> · $1.2k · 2m ago</li>
+<li><span style="color:red;">Sell</span> · $730 · 5m ago</li>
+<li>... more</li>
+</ul>
+</div>
+<div style="margin-top:20px;">
+<h3 style="font-size:16px; border-left:4px solid #61c5ff; padding-left:8px;">Dev Activity</h3>
+<ul style="font-size:14px;">
+<li>Sent 25,000 SNIFF</li>
+<li>Sent 14,500 BARK</li>
+<li>Sent 6,200 SNOUT</li>
+</ul>
+</div>
+</div>
+<footer style="text-align:center; font-size:13px; margin-top:40px;">
+<a href="https://x.com/sniffun" style="color:#61c5ff;" target="_blank">snif.fun</a> · 
+    <a href="https://believe.app" style="color:#61c5ff;" target="_blank">$SNIF</a>
+</footer>
+<script>
+    function searchTokenMobile() {
+      const ca = document.getElementById('ca-input-mobile').value.trim();
+      const errorBox = document.getElementById('error-box-mobile');
+      const resultSection = document.getElementById('mobile-result');
+
+      errorBox.style.display = 'none';
+      resultSection.style.display = 'none';
+
+      if (!/^([1-9A-HJ-NP-Za-km-z]{32,44})$/.test(ca)) {
+        errorBox.style.display = 'block';
+        return;
+      }
+      currentCA = ca;
+
+      const metaUrl = `https://pro-api.solscan.io/v2.0/token/meta?address=${ca}`;
+      const priceUrl = `https://solana-gateway.moralis.io/token/mainnet/${ca}/price`;
+      
+      const solscanKey =
+        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJjcmVhdGVkQXQiOjE3NDk4NjAwMjIwMDUsImVtYWlsIjoid2F4amluaG8wMkBnbWFpbC5jb20iLCJhY3Rpb24iOiJ0b2tlbi1hcGkiLCJhcGlWZXJzaW9uIjoidjIiLCJpYXQiOjE3NDk4NjAwMjJ9.I1laMt2a0wIiMeQ0JFEDDWWqvwLQvnSjcS0mdvy-vM0';
+      const moralisKey =
+        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJub25jZSI6IjkyMzBkNGU3LWUyNjEtNGNiYi1hYzgzLTY4MDZmNDg5YzRhOSIsIm9yZ0lkIjoiNDUzNzM2IiwidXNlcklkIjoiNDY2ODMzIiwidHlwZUlkIjoiODVkOTcxZDMtODgzOS00NmYxLWJiMGEtM2IyY2Y5ZmE4NTU2IiwidHlwZSI6IlBST0pFQ1QiLCJpYXQiOjE3NDk4MDU3MTcsImV4cCI6NDkwNTU2NTcxN30.nbLVfn0ocROspwVeWXIOtw-d6Gm42Bnshujhlp3JrMI';
+      const heliusKey = '07bae6e7-fc44-4501-bd71-958318efbeaf';
+
+      showDevHistoryLoading();
+      fetchFreshWalletRatio(ca, solscanKey, heliusKey);
+
+      Promise.all([
+        fetch(metaUrl, { headers: { token: solscanKey } }).then((r) => r.json()),
+        fetch(priceUrl, { headers: { 'X-API-Key': moralisKey } }).then((r) => r.json()),
+        fetch(liqUrl, { headers: { 'X-API-Key': moralisKey } }).then((r) => r.json()),
+      ])
+        .then(([meta, price, liq]) => {
+          if (!meta || !meta.success) throw new Error('meta fail');
+
+          const logo = document.querySelector('#mobile-result .summary-header img');
+          if (logo) logo.src = meta.data.icon || '';
+
+          document.getElementById('mobile-fullname').textContent = meta.data.name;
+
+          const tn = document.querySelector('#mobile-result .token-name');
+          if (tn && tn.firstChild) tn.firstChild.nodeValue = `$${meta.data.symbol}`;
+
+          const pumpImg = tn ? tn.querySelector('img[alt="pump.fun"]') : null;
+          const isPump = (meta.data.metadata?.createdOn || '').includes('pump.fun');
+          if (pumpImg) pumpImg.style.display = isPump ? 'inline-block' : 'none';
+
+          const priceEl = document.querySelector('#mobile-result .token-price');
+          if (priceEl) priceEl.textContent = '$' + Number(price.usdPrice).toFixed(6);
+
+          const marketCap = Number(meta.data.market_cap).toLocaleString();          const supply = Number(meta.data.supply).toLocaleString();
+
+          const details = document.querySelector('#mobile-result .summary-details');
+          if (details)
+            details.innerHTML =
+              `💰 Market Cap: ${marketCap} <br/>  💠 Supply: ${supply}`;
+
+          resultSection.style.display = 'block';
+          fetchDevHistory(ca, solscanKey);
+          fetchDevActivity(ca, solscanKey, heliusKey);
+          if (holdersInterval) clearInterval(holdersInterval);
+          fetchTopHolders(ca, solscanKey, 'holders-list-mobile');
+          holdersInterval = setInterval(() => fetchTopHolders(ca, solscanKey, 'holders-list-mobile'), 10000);
+        })
+        .catch((err) => {
+          console.error(err);
+          errorBox.style.display = 'block';
+        });
+    }
+  </script>
+</div>
+<div class="mobile-version">
+<div class="mobile-header">
+<img alt="snif.fun" class="logo" src="logo.png"/>
+<div class="title">snif.fun</div>
+<input id="ca-input-mobile" onkeypress="if(event.key==='Enter') searchTokenMobile()" placeholder="Enter CA" type="text"/>
+<button onclick="searchTokenMobile()">Search</button>
+</div>
+<div id="error-box-mobile" style="display:none; text-align:center; margin-top:16px;">
+<img alt="error" src="wrong.png" style="width:80px; margin-bottom:6px;"/>
+<div style="color:#dc3545; font-weight:bold;">Something is wrong!</div>
+</div>
+<div id="mobile-result" style="display:none; padding: 16px;">
+<div class="summary-card">
+<div class="summary-header">
+<img src="logo.png"/>
+<div>
+<div id="mobile-fullname" style="font-size: 14px; color: #666;">Token Name Example</div><div class="token-name">$TOKEN<img alt="pump.fun" src="pump_fun_logo.webp" style="max-height: 18px; width: auto; margin-left: 6px; vertical-align: middle;"/></div>
+<div class="token-price live-value">$0.012 </div>
+</div>
+</div>
+<div class="summary-details">
+      💰 Market Cap: -- <br/>
+      
+      💠 Supply: --
+    </div>
+</div>
+<div class="mobile-section">
+<h3>Top Holders</h3>
+<ul><li>3h4f...a9eF - 12.3%</li><li>...more</li></ul>
+</div>
+<div class="mobile-section">
+<h3>Holder Change</h3>
+<div class="holder-change-grid">
+<div class="change-card"><div class="label">5m</div><div class="value live-value">+2</div></div>
+<div class="change-card"><div class="label">1h</div><div class="value live-value">+15</div></div>
+<div class="change-card"><div class="label">6h</div><div class="value live-value">+32</div></div>
+<div class="change-card"><div class="label">24h</div><div class="value live-value">+80</div></div>
+<div class="change-card"><div class="label">3d</div><div class="value live-value">+210</div></div>
+<div class="change-card"><div class="label">7d</div><div class="value live-value">+550</div></div>
+<div class="change-card"><div class="label">30d</div><div class="value live-value">+1.4k</div></div>
+</div>
+</div>
+<div class="mobile-section">
+<h3>Recent Buys / Sells</h3>
+<ul>
+<li><span style="color:green;">Buy</span> · $1.2k · 2m ago</li>
+<li><span style="color:red;">Sell</span> · $730 · 5m ago</li>
+</ul>
+</div>
+<div class="mobile-section">
+<h3>Dev Activity</h3>
+<ul>
+<li>Sent 25,000 SNIFF</li>
+<li>Sent 14,500 BARK</li>
+</ul>
+</div>
+<div class="mobile-section" id="fresh-wallet-ratio-mobile" style="margin-top: 20px;">
+  <h3 style="font-size:16px;">📊 Fresh Wallet Ratio</h3>
+  <p style="font-size:14px;">This metric analyzes the top 20 holders of this token<br>
+     and determines how many of them are newly created wallets.</p>
+  <p id="fresh-wallet-count-mobile" style="font-size:14px;">🟢 Fresh Wallets: 0 / 30</p>
+  <p id="fresh-wallet-percentage-mobile" style="font-size:14px;">📈 Ratio: 0%</p>
+</div>
+<div class="mobile-section">
+<h3>Dev Create History</h3>
+<ul id="dev-create-mobile">
+<!-- JS inserts items here -->
+</ul>
+</div>
+</div>
+<footer class="footer-mobile">
+<a href="https://x.com/sniffun" target="_blank">snif.fun</a> ·
+  <a href="https://believe.app" target="_blank">$SNIF</a>
+</footer>
+</div>
+<script>
+function formatMarketCap(num) {
+  if (num >= 1e9) return '$' + (num / 1e9).toFixed(1) + 'B';
+  if (num >= 1e6) return '$' + (num / 1e6).toFixed(1) + 'M';
+  if (num >= 1e3) return '$' + (num / 1e3).toFixed(1) + 'k';
+  return '$' + Number(num).toFixed(0);
+}
+
+function copyCA(ca) {
+  navigator.clipboard.writeText(ca).then(() => alert('Contract Address Copied!'));
+}
+
+function showDevHistoryLoading() {
+  const tbody = document.getElementById('dev-token-history');
+  if (tbody) {
+    tbody.innerHTML = '<tr><td colspan="4" style="padding:4px;">Loading Dev Create History...</td></tr>';
+  }
+  const mobile = document.getElementById('dev-create-mobile');
+  if (mobile) {
+    mobile.innerHTML = '<li>Loading Dev Create History...</li>';
+  }
+}
+
+async function fetchDevHistory(ca, key) {
+  try {
+    const meta = await fetch(`https://pro-api.solscan.io/v2.0/token/meta?address=${ca}`, { headers: { token: key } }).then(r => r.json());
+    if (!meta.success) throw new Error('meta fail');
+    const creator = meta.data.creator;
+    const heliusRes = await fetch('https://mainnet.helius-rpc.com/?api-key=07bae6e7-fc44-4501-bd71-958318efbeaf', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ jsonrpc: '2.0', id: '1', method: 'getAssetsByCreator', params: { creatorAddress: creator } })
+    }).then(r => r.json());
+    const items = (heliusRes.result?.items || []).filter(it => it.interface === 'FungibleToken');
+    const tokens = [];
+    for (const it of items) {
+      if (tokens.length >= 10) break;
+      const tMeta = await fetch(`https://pro-api.solscan.io/v2.0/token/meta?address=${it.id}`, { headers: { token: key } }).then(r => r.json());
+      if (!tMeta.success) continue;
+      const mc = Number(tMeta.data.market_cap || 0);
+      if (!mc) continue;
+      tokens.push({
+        ca: it.id,
+        symbol: it.content?.metadata?.symbol || tMeta.data.symbol || '',
+        created: tMeta.data.created_time,
+        marketCap: mc,
+        pump: (tMeta.data.createdOn || tMeta.data.metadata?.createdOn || '').includes('pump.fun')
+      });
+    }
+    tokens.sort((a,b) => b.marketCap - a.marketCap);
+    const tbody = document.getElementById('dev-token-history');
+    const mobile = document.getElementById('dev-create-mobile');
+    if (tokens.length === 0) {
+      if (tbody) tbody.innerHTML = '<tr><td colspan="4" style="padding:4px;">No previous tokens found.</td></tr>';
+      if (mobile) mobile.innerHTML = '<li>No previous tokens found.</li>';
+      return;
+    }
+    if (tbody) {
+      tbody.innerHTML = tokens.map(t => {
+        const sym = t.symbol.length > 10 ? t.symbol.slice(0,10) + '....' : t.symbol;
+        const date = new Date(t.created * 1000).toISOString().slice(0,10);
+        return `<tr><td style="padding: 4px 6px; border-top: 1px solid #ccc;"><a href="#" onclick="copyCA('${t.ca}');return false;">$${sym}</a></td><td style="padding: 4px 6px; border-top: 1px solid #ccc;">${date}</td><td style="padding: 4px 6px; border-top: 1px solid #ccc;">${formatMarketCap(t.marketCap)}</td><td style="padding: 4px 6px; border-top: 1px solid #ccc;">${t.pump ? '✅' : '❌'}</td></tr>`;
+      }).join('');
+    }
+    if (mobile) {
+      mobile.innerHTML = tokens.map(t => {
+        const sym = t.symbol.length > 10 ? t.symbol.slice(0,10) + '....' : t.symbol;
+        return `<li><a class="address-link" href="#" onclick="copyCA('${t.ca}');return false;">$${sym}</a> <span style="color:#666;">· ${formatMarketCap(t.marketCap)}</span></li>`;
+      }).join('');
+    }
+  } catch(e){
+    console.error(e);
+  }
+}
+
+async function fetchDevActivity(ca, key, heliusKey) {
+  const list = document.getElementById('dev-tx-list');
+  if (!list) return;
+  list.innerHTML = '<li>Loading...</li>';
+  try {
+    const meta = await fetch(`https://pro-api.solscan.io/v2.0/token/meta?address=${ca}`, { headers: { token: key } }).then(r => r.json());
+    if (!meta.success) throw new Error('meta fail');
+    const dev = meta.data.creator;
+    const txRes = await fetch(`https://api.helius.xyz/v0/addresses/${dev}/transactions?api-key=${heliusKey}&limit=100`).then(r => r.json());
+    const txs = Array.isArray(txRes) ? txRes : (txRes.transactions || []);
+    const cache = {};
+    const getSymbol = async (mint) => {
+      if (cache[mint]) return cache[mint];
+      try {
+        const d = await fetch(`https://pro-api.solscan.io/v2.0/token/meta?address=${mint}`, { headers: { token: key } }).then(r => r.json());
+        cache[mint] = d.data?.symbol || mint.slice(0,4);
+      } catch {}
+      return cache[mint];
+    };
+    const activities = [];
+    for (const tx of txs) {
+      const transfers = tx.tokenTransfers || [];
+      const natives = tx.nativeTransfers || [];
+      const sent = transfers.filter(t => t.fromUserAccount === dev);
+      const recv = transfers.filter(t => t.toUserAccount === dev);
+      const sentSol = natives.some(n => n.fromUserAccount === dev);
+      const recvSol = natives.some(n => n.toUserAccount === dev);
+      if (recv.length && (sent.length || sentSol)) {
+        for (const tr of recv) {
+          const sym = await getSymbol(tr.mint);
+          const amt = (Number(tr.tokenAmount.amount) / 10**tr.tokenAmount.decimals).toLocaleString(undefined, {maximumFractionDigits:2});
+          activities.push({type:'Buy', sym, amt, sig: tx.signature});
+          if (activities.length >= 3) break;
+        }
+      } else if (sent.length && (recv.length || recvSol)) {
+        for (const tr of sent) {
+          const sym = await getSymbol(tr.mint);
+          const amt = (Number(tr.tokenAmount.amount) / 10**tr.tokenAmount.decimals).toLocaleString(undefined, {maximumFractionDigits:2});
+          activities.push({type:'Sell', sym, amt, sig: tx.signature});
+          if (activities.length >= 3) break;
+        }
+      } else if (sent.length) {
+        for (const tr of sent) {
+          const sym = await getSymbol(tr.mint);
+          const amt = (Number(tr.tokenAmount.amount) / 10**tr.tokenAmount.decimals).toLocaleString(undefined, {maximumFractionDigits:2});
+          activities.push({type:'Sent', sym, amt, sig: tx.signature});
+          if (activities.length >= 3) break;
+        }
+      }
+      if (activities.length >= 3) break;
+    }
+    if (activities.length === 0) {
+      list.innerHTML = '<li>No recent dev activity found.</li>';
+      return;
+    }
+    list.innerHTML = activities.map(a => `<li><span class="tag ${a.type.toLowerCase()}">${a.type}</span><a class="address-link" href="https://solscan.io/tx/${a.sig}" target="_blank">${a.amt} ${a.sym}</a></li>`).join('');
+  } catch(err) {
+    console.error(err);
+    list.innerHTML = '<li>Error loading dev activity</li>';
+  }
+}
+</script>
+<script>
+const network = "mainnet";
+const recentTxList = document.getElementById("recent-swaps-list");
+
+async function fetchRecentSwaps() {
+  const tokenAddress = currentCA;
+  try {
+    const response = await fetch(`https://solana-gateway.moralis.io/token/${network}/${tokenAddress}/swaps?order=DESC`, {
+      method: "GET",
+      headers: {
+        accept: "application/json",
+        "X-API-Key": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJub25jZSI6IjkyMzBkNGU3LWUyNjEtNGNiYi1hYzgzLTY4MDZmNDg5YzRhOSIsIm9yZ0lkIjoiNDUzNzM2IiwidXNlcklkIjoiNDY2ODMzIiwidHlwZUlkIjoiODVkOTcxZDMtODgzOS00NmYxLWJiMGEtM2IyY2Y5ZmE4NTU2IiwidHlwZSI6IlBST0pFQ1QiLCJpYXQiOjE3NDk4MDU3MTcsImV4cCI6NDkwNTU2NTcxN30.nbLVfn0ocROspwVeWXIOtw-d6Gm42Bnshujhlp3JrMI"
+      }
+    });
+    const data = await response.json();
+    const swaps = data.result.filter(tx => tx.totalValueUsd >= 20).slice(0, 3);
+    recentTxList.innerHTML = "";
+    for (const swap of swaps) {
+      const isBuy = swap.transactionType === "buy";
+      const color = isBuy ? "green" : "red";
+      const shortAddr = swap.walletAddress.slice(0, 4) + "..." + swap.walletAddress.slice(-4);
+      const formattedAmount = formatUSD(swap.totalValueUsd);
+      const txTime = timeAgo(new Date(swap.blockTimestamp));
+      const li = document.createElement("li");
+      li.innerHTML = `
+        ${isBuy ? "Buy" : "Sell"} by 
+        <a href="https://solscan.io/account/${swap.walletAddress}" target="_blank" style="color:#007bff;">${shortAddr}</a> · 
+        <a href="https://solscan.io/tx/${swap.transactionHash}" target="_blank" style="color:${color};margin-left:10px;">${formattedAmount}</a> · 
+        ${txTime} ago
+      `;
+      recentTxList.appendChild(li);
+    }
+  } catch (err) {
+    console.error("Failed to fetch swaps:", err);
+  }
+}
+
+function formatUSD(amount) {
+  if (amount >= 1000000) return `$${(amount / 1e6).toFixed(1)}m`;
+  if (amount >= 1000) return `$${(amount / 1e3).toFixed(1)}k`;
+  return `$${Math.round(amount)}`;
+}
+
+function timeAgo(date) {
+  const now = new Date();
+  const diffMs = now - date;
+  const diffMin = Math.floor(diffMs / 60000);
+  return `${diffMin}m`;
+}
+
+fetchRecentSwaps();
+setInterval(fetchRecentSwaps, 3000);
+</script>
+</body>
+</html>
