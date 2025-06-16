@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 
 <html lang="en">
@@ -891,7 +892,7 @@ async function fetchDevActivity(ca, key, heliusKey) {
   if (!list) return;
   list.innerHTML = '<li>Loading...</li>';
   try {
-    const meta = await fetch(`https://pro-api.solscan.io/v2.0/token/meta?tokenAddress=${ca}`, { headers: { token: key } }).then(r => r.json());
+    const meta = await fetch(`https://pro-api.solscan.io/v2.0/token/meta?address=${ca}`, { headers: { token: key } }).then(r => r.json());
     if (!meta.success) throw new Error('meta fail');
     const dev = meta.data.creator;
     const txRes = await fetch(`https://api.helius.xyz/v0/addresses/${dev}/transactions?api-key=${heliusKey}&limit=100`).then(r => r.json());
