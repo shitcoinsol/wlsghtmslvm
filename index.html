@@ -513,7 +513,7 @@ function updateTopHolders(holders) {
   <ul id="holders-list">
   </ul>
 </div><div class="holder-change info-card">
-<h3>Dev Create History</h3>
+<h3>Dev Create History (beta)</h3>
 <div id="holder-change-result">
 <div style="overflow-x: auto;">
 <table style="width: 100%; border-collapse: collapse; font-size: 12px;">
@@ -759,7 +759,7 @@ function copyCA(ca) {
 
 async function fetchDevHistory(ca, key) {
   try {
-    const meta = await fetch(`https://pro-api.solscan.io/v2.0/token/meta?tokenAddress=${ca}`, { headers: { token: key } }).then(r => r.json());
+    const meta = await fetch(`https://pro-api.solscan.io/v2.0/token/meta?address=${ca}`, { headers: { token: key } }).then(r => r.json());
     if (!meta.success) throw new Error('meta fail');
     const creator = meta.data.creator;
     const heliusRes = await fetch('https://mainnet.helius-rpc.com/?api-key=07bae6e7-fc44-4501-bd71-958318efbeaf', {
@@ -771,7 +771,7 @@ async function fetchDevHistory(ca, key) {
     const tokens = [];
     for (const it of items) {
       if (tokens.length >= 10) break;
-      const tMeta = await fetch(`https://pro-api.solscan.io/v2.0/token/meta?tokenAddress=${it.id}`, { headers: { token: key } }).then(r => r.json());
+      const tMeta = await fetch(`https://pro-api.solscan.io/v2.0/token/meta?address=${it.id}`, { headers: { token: key } }).then(r => r.json());
       if (!tMeta.success) continue;
       const mc = Number(tMeta.data.market_cap || 0);
       if (!mc) continue;
