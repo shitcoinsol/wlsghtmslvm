@@ -326,12 +326,11 @@
       return /^([1-9A-HJ-NP-Za-km-z]{32,44})$/.test(addr);
     }
 
-    function fetchTopHolders(ca, apiKey, listId = 'holders-list') {
-      const list = document.getElementById(listId);
-      if (!list) return;
-      list.innerHTML = '<li>Loading...</li>';
-      const url = `https://pro-api.solscan.io/v2.0/token/holders?address=${ca}&page=1&page_size=10`;
-      fetch(url, { headers: { token: apiKey } })
+      function fetchTopHolders(ca, apiKey, listId = 'holders-list') {
+        const list = document.getElementById(listId);
+        if (!list) return;
+        const url = `https://pro-api.solscan.io/v2.0/token/holders?address=${ca}&page=1&page_size=10`;
+        fetch(url, { headers: { token: apiKey } })
         .then(r => r.json())
         .then(data => {
           if (!data || !data.data) throw new Error('holder fail');
@@ -485,9 +484,8 @@
 <!-- Chart Placeholder -->
 </div></div><div class="info-grid"><div class="top-holders info-card">
 <h3>Top Holders</h3>
-<ul id="holders-list">
-  <li>Loading...</li>
-</ul>
+  <ul id="holders-list">
+  </ul>
 </div><div class="holder-change info-card">
 <h3>Holder Change</h3>
 <div id="holder-change-result"><div class="holder-change-grid"><div class="change-card"><div class="label">5m</div><div class="value live-value">+2</div></div><div class="change-card"><div class="label">1h</div><div class="value live-value">+15</div></div><div class="change-card"><div class="label">6h</div><div class="value live-value">+32</div></div><div class="change-card"><div class="label">24h</div><div class="value live-value">+80</div></div><div class="change-card"><div class="label">3d</div><div class="value live-value">+210</div></div><div class="change-card"><div class="label">7d</div><div class="value live-value">+550</div></div><div class="change-card"><div class="label">30d</div><div class="value live-value">+1.4k</div></div></div></div>
@@ -536,9 +534,8 @@
 </div>
 <div style="margin-top:20px;">
 <h3 style="font-size:16px; border-left:4px solid #61c5ff; padding-left:8px;">Top Holders</h3>
-<ul id="holders-list-mobile" style="font-size:14px;">
-  <li>Loading...</li>
-</ul>
+  <ul id="holders-list-mobile" style="font-size:14px;">
+  </ul>
 </div>
 <div style="margin-top:20px;">
 <h3 style="font-size:16px; border-left:4px solid #61c5ff; padding-left:8px;">Holder Change</h3>
