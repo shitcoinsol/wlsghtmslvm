@@ -315,6 +315,31 @@
     <a href="https://believe.app" style="color: #444; font-weight: 500; text-decoration: none; margin: 0 10px;" target="_blank">$SNIF</a>
 </footer>
 <script>
+// Override top holders update to prevent flickering
+function updateTopHolders(holders) {
+  const holdersList = document.getElementById("holders-list");
+  if (!holdersList) return;
+
+  const existingItems = holdersList.querySelectorAll("li");
+  holders.forEach((holder, i) => {
+    const shortAddr = holder.address.slice(0, 4) + "..." + holder.address.slice(-4);
+    const liHTML = `<a class="address-link" href="https://solscan.io/account/${holder.address}" target="_blank">${shortAddr}</a> - ${holder.percentage.toFixed(1)}%`;
+
+    if (existingItems[i]) {
+      existingItems[i].innerHTML = liHTML;
+    } else {
+      const li = document.createElement("li");
+      li.innerHTML = liHTML;
+      holdersList.appendChild(li);
+    }
+  });
+
+  // Optional: hide extra items if new list is shorter
+  for (let j = holders.length; j < existingItems.length; j++) {
+    existingItems[j].style.display = "none";
+  }
+}
+</script><script>
     let tokenInterval;
     let holdersInterval;
 
@@ -487,8 +512,24 @@
   <ul id="holders-list">
   </ul>
 </div><div class="holder-change info-card">
-<h3>Holder Change</h3>
-<div id="holder-change-result"><div class="holder-change-grid"><div class="change-card"><div class="label">5m</div><div class="value live-value">+2</div></div><div class="change-card"><div class="label">1h</div><div class="value live-value">+15</div></div><div class="change-card"><div class="label">6h</div><div class="value live-value">+32</div></div><div class="change-card"><div class="label">24h</div><div class="value live-value">+80</div></div><div class="change-card"><div class="label">3d</div><div class="value live-value">+210</div></div><div class="change-card"><div class="label">7d</div><div class="value live-value">+550</div></div><div class="change-card"><div class="label">30d</div><div class="value live-value">+1.4k</div></div></div></div>
+<h3>Dev Create History</h3>
+<div id="holder-change-result">
+<div style="overflow-x: auto;">
+<table style="width: 100%; border-collapse: collapse; font-size: 12px;">
+<thead>
+<tr style="background-color: #f0faff;">
+<th style="padding: 4px 6px; text-align: left;">Name</th>
+<th style="padding: 4px 6px; text-align: left;">Created</th>
+<th style="padding: 4px 6px; text-align: left;">MCap</th>
+<th style="padding: 4px 6px; text-align: left;">PumpFun?</th>
+</tr>
+</thead>
+<tbody id="dev-token-history">
+<!-- JS inserts rows here -->
+</tbody>
+</table>
+</div>
+</div>
 </div><div class="recent-tx info-card">
 <h3>Recent Buys / Sells</h3>
 <ul id="tx-list">
@@ -510,7 +551,7 @@
 <div class="sell-bar" style="width: 36%"></div>
 </div>
 <div>Buy: 64% · Sell: 36%</div>
-</div><div class="dev-create-history info-card"><h3>Dev Create History</h3><ul style="list-style:none; padding-left:0; font-size:14px;"><li style="margin-bottom: 6px;"><a class="address-link" href="https://solscan.io/token/devcat" target="_blank">$DEVCAT</a><span style="margin-left: 10px; color: #666; font-size: 13px;">Market Cap: $1.3M</span></li><li style="margin-bottom: 6px;"><a class="address-link" href="https://solscan.io/token/frogdev" target="_blank">$FROGDEV</a><span style="margin-left: 10px; color: #666; font-size: 13px;">Market Cap: $430K</span></li><li style="margin-bottom: 6px;"><a class="address-link" href="https://solscan.io/token/rugger" target="_blank">$RUGGER</a><span style="margin-left: 10px; color: #666; font-size: 13px;">Market Cap: $0 (rugged)</span></li></ul></div></div></div><div class="mobile-version">
+</div></div></div><div class="mobile-version">
 <div style="text-align:center; padding: 20px;">
 <img alt="snif.fun" src="logo.png" style="width:80px;"/>
 <div style="font-size: 28px; font-weight: bold; margin-top: 10px;">snif.fun</div>
