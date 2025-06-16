@@ -421,6 +421,7 @@ function updateTopHolders(holders) {
 
 
           resultSection.style.display = "block";
+          fetchDevHistory(ca, solscanKey);
           if (holdersInterval) clearInterval(holdersInterval);
           fetchTopHolders(ca, solscanKey);
           holdersInterval = setInterval(() => fetchTopHolders(ca, solscanKey), 10000);
@@ -525,36 +526,7 @@ function updateTopHolders(holders) {
 </tr>
 </thead>
 <tbody id="dev-token-history">
-<tr>
-  <td style="padding: 4px 6px; border-top: 1px solid #ccc;">$RUGZ</td>
-  <td style="padding: 4px 6px; border-top: 1px solid #ccc;">2025-06-13</td>
-  <td style="padding: 4px 6px; border-top: 1px solid #ccc;">$920K</td>
-  <td style="padding: 4px 6px; border-top: 1px solid #ccc;">✅</td>
-</tr>
-<tr>
-  <td style="padding: 4px 6px; border-top: 1px solid #ccc;">$MEOW</td>
-  <td style="padding: 4px 6px; border-top: 1px solid #ccc;">2025-06-11</td>
-  <td style="padding: 4px 6px; border-top: 1px solid #ccc;">$1.2M</td>
-  <td style="padding: 4px 6px; border-top: 1px solid #ccc;">❌</td>
-</tr>
-<tr>
-  <td style="padding: 4px 6px; border-top: 1px solid #ccc;">$MOONX</td>
-  <td style="padding: 4px 6px; border-top: 1px solid #ccc;">2025-06-09</td>
-  <td style="padding: 4px 6px; border-top: 1px solid #ccc;">$750K</td>
-  <td style="padding: 4px 6px; border-top: 1px solid #ccc;">✅</td>
-</tr>
-<tr>
-  <td style="padding: 4px 6px; border-top: 1px solid #ccc;">$DINO</td>
-  <td style="padding: 4px 6px; border-top: 1px solid #ccc;">2025-06-08</td>
-  <td style="padding: 4px 6px; border-top: 1px solid #ccc;">$430K</td>
-  <td style="padding: 4px 6px; border-top: 1px solid #ccc;">❌</td>
-</tr>
-<tr>
-  <td style="padding: 4px 6px; border-top: 1px solid #ccc;">$ZOOM</td>
-  <td style="padding: 4px 6px; border-top: 1px solid #ccc;">2025-06-06</td>
-  <td style="padding: 4px 6px; border-top: 1px solid #ccc;">$310K</td>
-  <td style="padding: 4px 6px; border-top: 1px solid #ccc;">✅</td>
-</tr>
+<!-- JS inserts rows here -->
 </tbody>
 </table>
 </div>
@@ -693,6 +665,7 @@ function updateTopHolders(holders) {
               `💰 Market Cap: ${marketCap} <br/>  💠 Supply: ${supply}`;
 
           resultSection.style.display = 'block';
+          fetchDevHistory(ca, solscanKey);
           if (holdersInterval) clearInterval(holdersInterval);
           fetchTopHolders(ca, solscanKey, 'holders-list-mobile');
           holdersInterval = setInterval(() => fetchTopHolders(ca, solscanKey, 'holders-list-mobile'), 10000);
@@ -762,9 +735,8 @@ function updateTopHolders(holders) {
 </div>
 <div class="mobile-section">
 <h3>Dev Create History</h3>
-<ul>
-<li><a class="address-link" href="#">$DEVCAT</a> <span style="color:#666;">· $1.3M</span></li>
-<li><a class="address-link" href="#">$FROGDEV</a> <span style="color:#666;">· $430K</span></li>
+<ul id="dev-create-mobile">
+<!-- JS inserts items here -->
 </ul>
 </div>
 </div>
@@ -773,5 +745,64 @@ function updateTopHolders(holders) {
   <a href="https://believe.app" target="_blank">$SNIF</a>
 </footer>
 </div>
+<script>
+function formatMarketCap(num) {
+  if (num >= 1e9) return '$' + (num / 1e9).toFixed(1) + 'B';
+  if (num >= 1e6) return '$' + (num / 1e6).toFixed(1) + 'M';
+  if (num >= 1e3) return '$' + (num / 1e3).toFixed(1) + 'k';
+  return '$' + Number(num).toFixed(0);
+}
+
+function copyCA(ca) {
+  navigator.clipboard.writeText(ca).then(() => alert('Contract Address Copied!'));
+}
+
+async function fetchDevHistory(ca, key) {
+  try {
+    const meta = await fetch(`https://pro-api.solscan.io/v2.0/token/meta?tokenAddress=${ca}`, { headers: { token: key } }).then(r => r.json());
+    if (!meta.success) throw new Error('meta fail');
+    const creator = meta.data.creator;
+    const heliusRes = await fetch('https://mainnet.helius-rpc.com/?api-key=07bae6e7-fc44-4501-bd71-958318efbeaf', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ jsonrpc: '2.0', id: '1', method: 'getAssetsByCreator', params: { creatorAddress: creator } })
+    }).then(r => r.json());
+    const items = (heliusRes.result?.items || []).filter(it => it.interface === 'FungibleToken');
+    const tokens = [];
+    for (const it of items) {
+      if (tokens.length >= 10) break;
+      const tMeta = await fetch(`https://pro-api.solscan.io/v2.0/token/meta?tokenAddress=${it.id}`, { headers: { token: key } }).then(r => r.json());
+      if (!tMeta.success) continue;
+      const mc = Number(tMeta.data.market_cap || 0);
+      if (!mc) continue;
+      tokens.push({
+        ca: it.id,
+        symbol: it.content?.metadata?.symbol || tMeta.data.symbol || '',
+        created: tMeta.data.created_time,
+        marketCap: mc,
+        pump: (tMeta.data.createdOn || tMeta.data.metadata?.createdOn || '').includes('pump.fun')
+      });
+    }
+    tokens.sort((a,b) => b.marketCap - a.marketCap);
+    const tbody = document.getElementById('dev-token-history');
+    if (tbody) {
+      tbody.innerHTML = tokens.map(t => {
+        const sym = t.symbol.length > 10 ? t.symbol.slice(0,10) + '....' : t.symbol;
+        const date = new Date(t.created * 1000).toISOString().slice(0,10);
+        return `<tr><td style="padding: 4px 6px; border-top: 1px solid #ccc;"><a href="#" onclick="copyCA('${t.ca}');return false;">$${sym}</a></td><td style="padding: 4px 6px; border-top: 1px solid #ccc;">${date}</td><td style="padding: 4px 6px; border-top: 1px solid #ccc;">${formatMarketCap(t.marketCap)}</td><td style="padding: 4px 6px; border-top: 1px solid #ccc;">${t.pump ? '✅' : '❌'}</td></tr>`;
+      }).join('');
+    }
+    const mobile = document.getElementById('dev-create-mobile');
+    if (mobile) {
+      mobile.innerHTML = tokens.map(t => {
+        const sym = t.symbol.length > 10 ? t.symbol.slice(0,10) + '....' : t.symbol;
+        return `<li><a class="address-link" href="#" onclick="copyCA('${t.ca}');return false;">$${sym}</a> <span style="color:#666;">· ${formatMarketCap(t.marketCap)}</span></li>`;
+      }).join('');
+    }
+  } catch(e){
+    console.error(e);
+  }
+}
+</script>
 </body>
 </html>
