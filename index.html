@@ -319,15 +319,6 @@
 @media (max-width: 768px) {
   .pc-version { display: none; }
   .mobile-version, .footer-mobile { display: block; }
-  #chart-and-bubble {
-    flex-direction: column;
-  }
-
-  #chart-container,
-  #bubble-container {
-    flex: 0 0 100%;
-    max-width: 100%;
-  }
 }
 </style>
 </head>
@@ -492,11 +483,6 @@ function updateTopHolders(holders) {
 
 
           resultSection.style.display = "block";
-
-          const bubbleMapIframe = document.getElementById("bubble-map-iframe");
-          if (bubbleMapIframe && ca) {
-            bubbleMapIframe.src = `https://app.insightx.network/bubblemaps/solana/${ca}`;
-          }
           fetchDevHistory(ca, solscanKey);
           fetchDevActivity(ca, solscanKey, heliusKey);
           if (holdersInterval) clearInterval(holdersInterval);
@@ -583,23 +569,9 @@ function updateTopHolders(holders) {
 <div class="live-value" id="token-price">$0.012 </div>
 <div id="token-metrics">Market Cap: -- · Liquidity: -- · Supply: --</div>
 </div>
-</div><div id="chart-and-bubble" style="display: flex; flex-wrap: wrap; gap: 20px;">
-  <div id="chart-container" style="flex: 0 0 50%; max-width: 50%;">
-    <div id="price-chart-widget-container" style="width: 100%; height:100%">
-    <!-- Chart Placeholder -->
-    </div>
-  </div>
-  <div id="bubble-container" style="flex: 0 0 50%; max-width: 50%;">
-    <iframe
-      id="bubble-map-iframe"
-      src=""
-      width="100%"
-      height="500"
-      style="border: none; border-radius: 12px;"
-      loading="lazy">
-    </iframe>
-  </div>
-</div><div class="info-grid"><div class="top-holders info-card">
+</div><div class="chart-container"><div id="price-chart-widget-container" style="width: 100%; height:100%">
+<!-- Chart Placeholder -->
+</div></div><div class="info-grid"><div class="top-holders info-card">
 <h3>Top Holders</h3>
   <ul id="holders-list">
   </ul>
@@ -852,13 +824,6 @@ function copyCA(ca) {
   navigator.clipboard.writeText(ca).then(() => alert('Contract Address Copied!'));
 }
 
-function formatTokenAmount(num) {
-  const n = Number(num);
-  if (n >= 1e6) return (n / 1e6).toFixed(1) + 'm';
-  if (n >= 1e3) return (n / 1e3).toFixed(1) + 'k';
-  return n.toLocaleString(undefined, { maximumFractionDigits: 2 });
-}
-
 function showDevHistoryLoading() {
   const tbody = document.getElementById('dev-token-history');
   if (tbody) {
@@ -924,17 +889,23 @@ async function fetchDevHistory(ca, key) {
 
 async function fetchDevActivity(ca, key, heliusKey) {
   const list = document.getElementById('dev-tx-list');
-  const mobileSection = Array.from(document.querySelectorAll('.mobile-section'))
-    .find(s => s.querySelector('h3') && s.querySelector('h3').textContent.trim() === 'Dev Activity');
-  const mobileList = mobileSection ? mobileSection.querySelector('ul') : null;
-  if (list) list.innerHTML = '<li>Loading...</li>';
-  if (mobileList) mobileList.innerHTML = '<li>Loading...</li>';
+  if (!list) return;
+  list.innerHTML = '<li>Loading...</li>';
   try {
     const meta = await fetch(`https://pro-api.solscan.io/v2.0/token/meta?address=${ca}`, { headers: { token: key } }).then(r => r.json());
     if (!meta.success) throw new Error('meta fail');
     const dev = meta.data.creator;
     const txRes = await fetch(`https://api.helius.xyz/v0/addresses/${dev}/transactions?api-key=${heliusKey}&limit=100`).then(r => r.json());
     const txs = Array.isArray(txRes) ? txRes : (txRes.transactions || []);
+    const cache = {};
+    const getSymbol = async (mint) => {
+      if (cache[mint]) return cache[mint];
+      try {
+        const d = await fetch(`https://pro-api.solscan.io/v2.0/token/meta?address=${mint}`, { headers: { token: key } }).then(r => r.json());
+        cache[mint] = d.data?.symbol || mint.slice(0,4);
+      } catch {}
+      return cache[mint];
+    };
     const activities = [];
     for (const tx of txs) {
       const transfers = tx.tokenTransfers || [];
@@ -945,22 +916,22 @@ async function fetchDevActivity(ca, key, heliusKey) {
       const recvSol = natives.some(n => n.toUserAccount === dev);
       if (recv.length && (sent.length || sentSol)) {
         for (const tr of recv) {
-          const sym = tr.tokenSymbol || tr.mint.slice(0,4);
-          const amt = formatTokenAmount(tr.amount);
+          const sym = await getSymbol(tr.mint);
+          const amt = (Number(tr.tokenAmount.amount) / 10**tr.tokenAmount.decimals).toLocaleString(undefined, {maximumFractionDigits:2});
           activities.push({type:'Buy', sym, amt, sig: tx.signature});
           if (activities.length >= 3) break;
         }
       } else if (sent.length && (recv.length || recvSol)) {
         for (const tr of sent) {
-          const sym = tr.tokenSymbol || tr.mint.slice(0,4);
-          const amt = formatTokenAmount(tr.amount);
+          const sym = await getSymbol(tr.mint);
+          const amt = (Number(tr.tokenAmount.amount) / 10**tr.tokenAmount.decimals).toLocaleString(undefined, {maximumFractionDigits:2});
           activities.push({type:'Sell', sym, amt, sig: tx.signature});
           if (activities.length >= 3) break;
         }
       } else if (sent.length) {
         for (const tr of sent) {
-          const sym = tr.tokenSymbol || tr.mint.slice(0,4);
-          const amt = formatTokenAmount(tr.amount);
+          const sym = await getSymbol(tr.mint);
+          const amt = (Number(tr.tokenAmount.amount) / 10**tr.tokenAmount.decimals).toLocaleString(undefined, {maximumFractionDigits:2});
           activities.push({type:'Sent', sym, amt, sig: tx.signature});
           if (activities.length >= 3) break;
         }
@@ -968,17 +939,13 @@ async function fetchDevActivity(ca, key, heliusKey) {
       if (activities.length >= 3) break;
     }
     if (activities.length === 0) {
-      if (list) list.innerHTML = '<li>No recent dev activity found.</li>';
-      if (mobileList) mobileList.innerHTML = '<li>No recent dev activity found.</li>';
+      list.innerHTML = '<li>No recent dev activity found.</li>';
       return;
     }
-    const html = activities.map(a => `<li><span class="tag ${a.type.toLowerCase()}">${a.type}</span><a class="address-link" href="https://solscan.io/tx/${a.sig}" target="_blank">${a.amt} ${a.sym}</a></li>`).join('');
-    if (list) list.innerHTML = html;
-    if (mobileList) mobileList.innerHTML = html;
+    list.innerHTML = activities.map(a => `<li><span class="tag ${a.type.toLowerCase()}">${a.type}</span><a class="address-link" href="https://solscan.io/tx/${a.sig}" target="_blank">${a.amt} ${a.sym}</a></li>`).join('');
   } catch(err) {
     console.error(err);
-    if (list) list.innerHTML = '<li>Error loading dev activity</li>';
-    if (mobileList) mobileList.innerHTML = '<li>Error loading dev activity</li>';
+    list.innerHTML = '<li>Error loading dev activity</li>';
   }
 }
 </script>
