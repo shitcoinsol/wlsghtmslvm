@@ -393,6 +393,8 @@ function updateTopHolders(holders) {
       const moralisKey =
         "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJub25jZSI6IjkyMzBkNGU3LWUyNjEtNGNiYi1hYzgzLTY4MDZmNDg5YzRhOSIsIm9yZ0lkIjoiNDUzNzM2IiwidXNlcklkIjoiNDY2ODMzIiwidHlwZUlkIjoiODVkOTcxZDMtODgzOS00NmYxLWJiMGEtM2IyY2Y5ZmE4NTU2IiwidHlwZSI6IlBST0pFQ1QiLCJpYXQiOjE3NDk4MDU3MTcsImV4cCI6NDkwNTU2NTcxN30.nbLVfn0ocROspwVeWXIOtw-d6Gm42Bnshujhlp3JrMI";
 
+      showDevHistoryLoading();
+
       Promise.all([
         fetch(metaUrl, { headers: { token: solscanKey } }).then((r) => r.json()),
         fetch(priceUrl, { headers: { "X-API-Key": moralisKey } }).then((r) => r.json()),
@@ -634,6 +636,8 @@ function updateTopHolders(holders) {
       const moralisKey =
         'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJub25jZSI6IjkyMzBkNGU3LWUyNjEtNGNiYi1hYzgzLTY4MDZmNDg5YzRhOSIsIm9yZ0lkIjoiNDUzNzM2IiwidXNlcklkIjoiNDY2ODMzIiwidHlwZUlkIjoiODVkOTcxZDMtODgzOS00NmYxLWJiMGEtM2IyY2Y5ZmE4NTU2IiwidHlwZSI6IlBST0pFQ1QiLCJpYXQiOjE3NDk4MDU3MTcsImV4cCI6NDkwNTU2NTcxN30.nbLVfn0ocROspwVeWXIOtw-d6Gm42Bnshujhlp3JrMI';
 
+      showDevHistoryLoading();
+
       Promise.all([
         fetch(metaUrl, { headers: { token: solscanKey } }).then((r) => r.json()),
         fetch(priceUrl, { headers: { 'X-API-Key': moralisKey } }).then((r) => r.json()),
@@ -757,6 +761,17 @@ function copyCA(ca) {
   navigator.clipboard.writeText(ca).then(() => alert('Contract Address Copied!'));
 }
 
+function showDevHistoryLoading() {
+  const tbody = document.getElementById('dev-token-history');
+  if (tbody) {
+    tbody.innerHTML = '<tr><td colspan="4" style="padding:4px;">Loading Dev Create History...</td></tr>';
+  }
+  const mobile = document.getElementById('dev-create-mobile');
+  if (mobile) {
+    mobile.innerHTML = '<li>Loading Dev Create History...</li>';
+  }
+}
+
 async function fetchDevHistory(ca, key) {
   try {
     const meta = await fetch(`https://pro-api.solscan.io/v2.0/token/meta?address=${ca}`, { headers: { token: key } }).then(r => r.json());
@@ -785,6 +800,12 @@ async function fetchDevHistory(ca, key) {
     }
     tokens.sort((a,b) => b.marketCap - a.marketCap);
     const tbody = document.getElementById('dev-token-history');
+    const mobile = document.getElementById('dev-create-mobile');
+    if (tokens.length === 0) {
+      if (tbody) tbody.innerHTML = '<tr><td colspan="4" style="padding:4px;">No previous tokens found.</td></tr>';
+      if (mobile) mobile.innerHTML = '<li>No previous tokens found.</li>';
+      return;
+    }
     if (tbody) {
       tbody.innerHTML = tokens.map(t => {
         const sym = t.symbol.length > 10 ? t.symbol.slice(0,10) + '....' : t.symbol;
@@ -792,7 +813,6 @@ async function fetchDevHistory(ca, key) {
         return `<tr><td style="padding: 4px 6px; border-top: 1px solid #ccc;"><a href="#" onclick="copyCA('${t.ca}');return false;">$${sym}</a></td><td style="padding: 4px 6px; border-top: 1px solid #ccc;">${date}</td><td style="padding: 4px 6px; border-top: 1px solid #ccc;">${formatMarketCap(t.marketCap)}</td><td style="padding: 4px 6px; border-top: 1px solid #ccc;">${t.pump ? '✅' : '❌'}</td></tr>`;
       }).join('');
     }
-    const mobile = document.getElementById('dev-create-mobile');
     if (mobile) {
       mobile.innerHTML = tokens.map(t => {
         const sym = t.symbol.length > 10 ? t.symbol.slice(0,10) + '....' : t.symbol;
