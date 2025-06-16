@@ -313,6 +313,20 @@
 .dev-activity .tag.sell { background-color: #dc3545; }
 .dev-activity .tag.sent { background-color: #6c757d; }
 
+/* Holder entry layout */
+.holder-entry {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+  font-size: 14px;
+}
+.holder-right {
+  text-align: right;
+  font-weight: bold;
+  color: #333;
+}
+
 /* Responsive toggling */
 .pc-version { display: block; }
 .mobile-version, .footer-mobile { display: none; }
@@ -368,6 +382,11 @@ function updateTopHolders(holders) {
     let tokenInterval;
     let holdersInterval;
     let currentCA = '';
+    let cachedTopHolders = [];
+    let isFirstLoad = true;
+    let currentTokenPrice = 0;
+    let currentTokenSymbol = '';
+    let currentTokenDecimals = 0;
 
     function handleKeyPress(e) {
       if (e.key === "Enter") searchToken();
@@ -377,25 +396,162 @@ function updateTopHolders(holders) {
       return /^([1-9A-HJ-NP-Za-km-z]{32,44})$/.test(addr);
     }
 
-    function fetchTopHolders(ca, apiKey, listId = 'holders-list') {
+    function formatNumber(num) {
+        if (num >= 1_000_000_000) return (num / 1_000_000_000).toFixed(2) + 'b';
+        if (num >= 1_000_000) return (num / 1_000_000).toFixed(2) + 'm';
+        if (num >= 1_000) return (num / 1_000).toFixed(2) + 'k';
+        return Number(num).toFixed(2);
+    }
+
+    function formatUSD(value) {
+        return '$' + formatNumber(value);
+    }
+
+    function formatTokenDisplay(rawAmount, decimals, tokenPrice) {
+        const trueAmount = rawAmount / Math.pow(10, decimals);
+        const usdValue = trueAmount * tokenPrice;
+
+        const amountFormatted = formatNumber(trueAmount);
+        const usdFormatted = formatUSD(usdValue);
+
+        return `${amountFormatted} (${usdFormatted})`;
+    }
+
+    function formatNumber(num) {
+        if (num >= 1_000_000_000) return (num / 1_000_000_000).toFixed(2) + 'b';
+        if (num >= 1_000_000) return (num / 1_000_000).toFixed(2) + 'm';
+        if (num >= 1_000) return (num / 1_000).toFixed(2) + 'k';
+        return num.toFixed(2);
+    }
+
+    function formatUSD(num) {
+        return '$' + formatNumber(num);
+    }
+
+    async function fetchHolderAsset(address) {
+        try {
+            const body = {
+                jsonrpc: "2.0",
+                id: "1",
+                method: "getAssetsByOwner",
+                params: {
+                    ownerAddress: address,
+                    options: {
+                        showUnverifiedCollections: false,
+                        showCollectionMetadata: false,
+                        showGrandTotal: false,
+                        showFungible: true,
+                        showNativeBalance: true,
+                        showInscription: false,
+                        showZeroBalance: false
+                    }
+                }
+            };
+
+            const res = await fetch('https://mainnet.helius-rpc.com/?api-key=07bae6e7-fc44-4501-bd71-958318efbeaf', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(body)
+            });
+
+            const data = await res.json();
+            const result = data.result || {};
+
+            // 1. SOL
+            const solValue = Number(result.nativeBalance?.total_price || 0);
+            const solAmount = Number(result.nativeBalance?.lamports || 0) / 1e9;
+            let best = {
+                value: solValue,
+                symbol: 'SOL',
+                amount: solAmount
+            };
+
+            // 2. SPL
+            const items = Array.isArray(result.items) ? result.items : [];
+            for (const it of items) {
+                const price = Number(it.token_info?.price_info?.total_price || 0);
+                if (price > best.value) {
+                    const balance = Number(it.token_info?.balance || 0);
+                    const decimals = Number(it.token_info?.decimals || 0);
+                    best = {
+                        value: price,
+                        symbol: it.token_info?.symbol || '',
+                        amount: balance / Math.pow(10, decimals)
+                    };
+                }
+            }
+
+            return `${best.symbol} · ${formatNumber(best.amount)} (${formatUSD(best.value)})`;
+        } catch (e) {
+            console.error("fetchHolderAsset failed:", e);
+            return 'N/A';
+        }
+    }
+
+    async function fetchTopHolders(ca, apiKey, listId = 'holders-list') {
         const list = document.getElementById(listId);
         if (!list) return;
-        const url = `https://pro-api.solscan.io/v2.0/token/holders?address=${ca}&page=1&page_size=10`;
-        fetch(url, { headers: { token: apiKey } })
-        .then(r => r.json())
-        .then(data => {
-          if (!data || !data.data) throw new Error('holder fail');
-          list.innerHTML = data.data.items.slice(0, 10).map(it => {
-            const addr = it.owner;
-            const pct = Number(it.percentage || 0);
-            const short = `${addr.slice(0,4)}...${addr.slice(-4)}`;
-            return `<li><a class="address-link" href="https://solscan.io/account/${addr}" target="_blank">${short}</a> - ${pct.toFixed(1)}%</li>`;
-          }).join('');
-        })
-        .catch(err => {
-          console.error(err);
-          list.innerHTML = '<li>Error loading holders</li>';
-        });
+
+        if (isFirstLoad) {
+            list.innerHTML = '<li>Loading Top Holders...</li>';
+        }
+
+        try {
+            const url = `https://pro-api.solscan.io/v2.0/token/holders?address=${ca}&page=1&page_size=10`;
+            const res = await fetch(url, { headers: { token: apiKey } });
+            const data = await res.json();
+
+            if (!data?.data?.items) throw new Error("Invalid holder response");
+            const items = data.data.items.slice(0, 10);
+
+            const enriched = items.map(it => {
+                let amt = Number(it.amount || it.balance || it.uiAmount || (it.tokenAmount ? (Number(it.tokenAmount.amount) / Math.pow(10, it.tokenAmount.decimals || currentTokenDecimals)) : 0));
+                if (isNaN(amt)) amt = 0;
+                return {
+                    address: it.owner || it.address,
+                    amount: amt,
+                    percentage: it.percentage || 0
+                };
+            });
+
+            cachedTopHolders = enriched;
+
+            const rendered = await Promise.all(enriched.map(async holder => {
+                const short = `${holder.address.slice(0, 4)}...${holder.address.slice(-4)}`;
+                const displayText = await fetchHolderAsset(holder.address);
+                const percentText = `${holder.percentage.toFixed(1)}%`;
+                return `
+    <li class="holder-entry">
+      <a class="address-link" href="https://solscan.io/account/${holder.address}" target="_blank">${short}</a>
+      <div class="holder-right">${displayText} <span style="color:#888; font-weight:normal;">(${percentText})</span></div>
+    </li>`;
+            }));
+
+            list.innerHTML = rendered.join('');
+
+            isFirstLoad = false;
+
+        } catch (e) {
+            console.error(e);
+
+            list.innerHTML = '';
+
+            if (cachedTopHolders.length > 0) {
+                for (const holder of cachedTopHolders) {
+                    const short = `${holder.address.slice(0, 4)}...${holder.address.slice(-4)}`;
+                    const displayText = await fetchHolderAsset(holder.address);
+                    const percentText = `${holder.percentage.toFixed(1)}%`;
+                    const li = document.createElement('li');
+                    li.className = 'holder-entry';
+                    li.innerHTML = `
+          <a class="address-link" href="https://solscan.io/account/${holder.address}" target="_blank">${short}</a>
+          <div class="holder-right">${displayText} <span style="color:#888; font-weight:normal;">(${percentText})</span></div>`;
+                    list.appendChild(li);
+                }
+            } else {
+                list.innerHTML = '<li>Error loading holders</li>';
+            }
+        }
     }
 
     async function fetchFreshWalletRatio(ca, solscanKey, heliusKey) {
@@ -475,6 +631,10 @@ function updateTopHolders(holders) {
           document.getElementById("token-price").textContent =
             "$" + Number(price.usdPrice).toFixed(6);
 
+          currentTokenPrice = Number(price.usdPrice);
+          currentTokenSymbol = meta.data.symbol;
+          currentTokenDecimals = Number(meta.data.decimals || 0);
+
           const marketCap = Number(meta.data.market_cap).toLocaleString();          const supply = Number(meta.data.supply).toLocaleString();
 
           document.getElementById(
@@ -486,6 +646,7 @@ function updateTopHolders(holders) {
           fetchDevHistory(ca, solscanKey);
           fetchDevActivity(ca, solscanKey, heliusKey);
           if (holdersInterval) clearInterval(holdersInterval);
+          document.getElementById('holders-list').innerHTML = '<li>Loading Top Holders...</li>';
           fetchTopHolders(ca, solscanKey);
           holdersInterval = setInterval(() => fetchTopHolders(ca, solscanKey), 10000);
 
@@ -710,6 +871,10 @@ function updateTopHolders(holders) {
 
           const priceEl = document.querySelector('#mobile-result .token-price');
           if (priceEl) priceEl.textContent = '$' + Number(price.usdPrice).toFixed(6);
+
+          currentTokenPrice = Number(price.usdPrice);
+          currentTokenSymbol = meta.data.symbol;
+          currentTokenDecimals = Number(meta.data.decimals || 0);
 
           const marketCap = Number(meta.data.market_cap).toLocaleString();          const supply = Number(meta.data.supply).toLocaleString();
 
@@ -981,10 +1146,9 @@ async function fetchRecentSwaps() {
   }
 }
 
+// Reuse the global formatter for USD values
 function formatUSD(amount) {
-  if (amount >= 1000000) return `$${(amount / 1e6).toFixed(1)}m`;
-  if (amount >= 1000) return `$${(amount / 1e3).toFixed(1)}k`;
-  return `$${Math.round(amount)}`;
+  return '$' + formatNumber(amount);
 }
 
 function timeAgo(date) {
