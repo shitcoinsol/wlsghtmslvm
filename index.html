@@ -300,6 +300,18 @@
   transition: color 0.3s ease;
 }
 
+/* Dev activity tags */
+.dev-activity .tag {
+  padding: 2px 6px;
+  border-radius: 4px;
+  color: #fff;
+  font-size: 12px;
+  margin-right: 4px;
+}
+.dev-activity .tag.buy { background-color: #28a745; }
+.dev-activity .tag.sell { background-color: #dc3545; }
+.dev-activity .tag.sent { background-color: #6c757d; }
+
 /* Responsive toggling */
 .pc-version { display: block; }
 .mobile-version, .footer-mobile { display: none; }
@@ -471,6 +483,7 @@ function updateTopHolders(holders) {
 
           resultSection.style.display = "block";
           fetchDevHistory(ca, solscanKey);
+          fetchDevActivity(ca, solscanKey, heliusKey);
           if (holdersInterval) clearInterval(holdersInterval);
           fetchTopHolders(ca, solscanKey);
           holdersInterval = setInterval(() => fetchTopHolders(ca, solscanKey), 10000);
@@ -585,7 +598,7 @@ function updateTopHolders(holders) {
 <ul id="recent-swaps-list"></ul>
 </div><div class="dev-activity info-card">
 <h3>Dev Activity</h3>
-<ul id="dev-tx-list"><li><a class="address-link" href="https://solscan.io/tx/devtx1" target="_blank">Sent 25,000 SNIFF</a></li><li><a class="address-link" href="https://solscan.io/tx/devtx2" target="_blank">Sent 14,500 BARK</a></li><li><a class="address-link" href="https://solscan.io/tx/devtx3" target="_blank">Sent 6,200 SNOUT</a></li></ul>
+<ul id="dev-tx-list"></ul>
 </div></div><div id="fresh-wallet-ratio" class="info-card" style="margin-top: 20px;">
   <h3>📊 Fresh Wallet Ratio</h3>
   <p>This metric analyzes the top 20 holders of this token<br>
@@ -711,6 +724,7 @@ function updateTopHolders(holders) {
 
           resultSection.style.display = 'block';
           fetchDevHistory(ca, solscanKey);
+          fetchDevActivity(ca, solscanKey, heliusKey);
           if (holdersInterval) clearInterval(holdersInterval);
           fetchTopHolders(ca, solscanKey, 'holders-list-mobile');
           holdersInterval = setInterval(() => fetchTopHolders(ca, solscanKey, 'holders-list-mobile'), 10000);
@@ -869,6 +883,68 @@ async function fetchDevHistory(ca, key) {
     }
   } catch(e){
     console.error(e);
+  }
+}
+
+async function fetchDevActivity(ca, key, heliusKey) {
+  const list = document.getElementById('dev-tx-list');
+  if (!list) return;
+  list.innerHTML = '<li>Loading...</li>';
+  try {
+    const meta = await fetch(`https://pro-api.solscan.io/v2.0/token/meta?tokenAddress=${ca}`, { headers: { token: key } }).then(r => r.json());
+    if (!meta.success) throw new Error('meta fail');
+    const dev = meta.data.creator;
+    const txRes = await fetch(`https://api.helius.xyz/v0/addresses/${dev}/transactions?api-key=${heliusKey}&limit=100`).then(r => r.json());
+    const txs = Array.isArray(txRes) ? txRes : (txRes.transactions || []);
+    const cache = {};
+    const getSymbol = async (mint) => {
+      if (cache[mint]) return cache[mint];
+      try {
+        const d = await fetch(`https://pro-api.solscan.io/v2.0/token/meta?address=${mint}`, { headers: { token: key } }).then(r => r.json());
+        cache[mint] = d.data?.symbol || mint.slice(0,4);
+      } catch {}
+      return cache[mint];
+    };
+    const activities = [];
+    for (const tx of txs) {
+      const transfers = tx.tokenTransfers || [];
+      const natives = tx.nativeTransfers || [];
+      const sent = transfers.filter(t => t.fromUserAccount === dev);
+      const recv = transfers.filter(t => t.toUserAccount === dev);
+      const sentSol = natives.some(n => n.fromUserAccount === dev);
+      const recvSol = natives.some(n => n.toUserAccount === dev);
+      if (recv.length && (sent.length || sentSol)) {
+        for (const tr of recv) {
+          const sym = await getSymbol(tr.mint);
+          const amt = (Number(tr.tokenAmount.amount) / 10**tr.tokenAmount.decimals).toLocaleString(undefined, {maximumFractionDigits:2});
+          activities.push({type:'Buy', sym, amt, sig: tx.signature});
+          if (activities.length >= 3) break;
+        }
+      } else if (sent.length && (recv.length || recvSol)) {
+        for (const tr of sent) {
+          const sym = await getSymbol(tr.mint);
+          const amt = (Number(tr.tokenAmount.amount) / 10**tr.tokenAmount.decimals).toLocaleString(undefined, {maximumFractionDigits:2});
+          activities.push({type:'Sell', sym, amt, sig: tx.signature});
+          if (activities.length >= 3) break;
+        }
+      } else if (sent.length) {
+        for (const tr of sent) {
+          const sym = await getSymbol(tr.mint);
+          const amt = (Number(tr.tokenAmount.amount) / 10**tr.tokenAmount.decimals).toLocaleString(undefined, {maximumFractionDigits:2});
+          activities.push({type:'Sent', sym, amt, sig: tx.signature});
+          if (activities.length >= 3) break;
+        }
+      }
+      if (activities.length >= 3) break;
+    }
+    if (activities.length === 0) {
+      list.innerHTML = '<li>No recent dev activity found.</li>';
+      return;
+    }
+    list.innerHTML = activities.map(a => `<li><span class="tag ${a.type.toLowerCase()}">${a.type}</span><a class="address-link" href="https://solscan.io/tx/${a.sig}" target="_blank">${a.amt} ${a.sym}</a></li>`).join('');
+  } catch(err) {
+    console.error(err);
+    list.innerHTML = '<li>Error loading dev activity</li>';
   }
 }
 </script>
